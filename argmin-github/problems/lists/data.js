@@ -1,0 +1,6 @@
+// Item-list models — knapsack, bin packing, set covering, job sequencing samples
+export function listSample(id){
+    if(id==='knapsack')return{cap:10,capLabel:'Capacity',capUnit:'kg',cols:[{l:'VALUE',u:''},{l:'WEIGHT',u:'kg'}],items:[['Tent',45,6],['Stove',30,3],['Water filter',25,1],['Sleeping bag',40,4],['Camera',60,2],['First aid kit',15,1]],hint:'Value is what an item is worth to you — the solver maximises total value within the weight limit.'};
+    if(id==='binpacking')return{cap:100,capLabel:'Bin size',capUnit:'',cols:[{l:'SIZE',u:''}],items:[['Crate A',42],['Crate B',63],['Crate C',35],['Crate D',58],['Crate E',21],['Crate F',77]],hint:'Every item must be packed — the solver minimises how many bins it takes.'};
+    if(id==='setcovering')return{cap:null,cols:[{l:'COST',u:''},{l:'COVERS',u:'',txt:true}],items:[['Site North',3,'A, B, D'],['Site Centre',2,'B, C'],['Site South',4,'C, D, E'],['Site East',3,'A, E']],hint:'List what each option covers — the solver picks the cheapest combination that covers every requirement.'};
+    return{cap:null,cols:[{l:'DURATION',u:'h'},{l:'DUE',u:'h'}],items:[['Job 101',4,8],['Job 102',2,4],['Job 103',6,16],['Job 104',3,6],['Job 105',5,12]],hint:'The solver orders jobs to minimise lateness against due times.'};}
