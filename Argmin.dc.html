@@ -894,13 +894,13 @@ class Component extends DCLogic {
     this.setState({costs,src:pad(this.state.src,rows.length,i=>'Source '+(i+1)),dst:pad(this.state.dst,nC,i=>'Dest '+(i+1)),supply:pad(this.state.supply,rows.length,()=>100),demand:pad(this.state.demand,nC,()=>100),pasteOpen:false,pasteTxt:''});}
 
   MODELS={transportation:{name:'Transportation',fam:'t',title:'Denver network'},transshipment:{name:'Transshipment',fam:'t',title:'Depot routing'},assignment:{name:'Assignment',fam:'a',title:'Crew rota'},knapsack:{name:'Knapsack',fam:'l',title:'Trail pack'},setcovering:{name:'Set covering',fam:'l',title:'Clinic sites'},binpacking:{name:'Bin packing',fam:'l',title:'Pallet loading'},jobseq:{name:'Job sequencing',fam:'l',title:'Print queue'},shortestpath:{name:'Shortest path',fam:'g',title:'Campus shuttle'},maxflow:{name:'Maximum flow',fam:'g',title:'Pipeline capacity'},mincostflow:{name:'Minimum cost flow',fam:'g',title:'Freight network'},tsp:{name:'Travelling salesman',fam:'g',title:'Sales loop'},vrp:{name:'Vehicle routing',fam:'g',title:'Delivery fleet'},stable:{name:'Stable matching',fam:'p',title:'Residency match'},bipartite:{name:'Bipartite matching',fam:'p',title:'Shift cover'},gifts:{name:'Gift assignment',fam:'gf',title:'My gift list'}};
-  async openModel(id){await this.loadData();const M=this.MODELS[id];const p={screen:'editor',model:id,title:M.title,pasteOpen:false,mode:'matrix'};
+  async openModel(id,fresh){await this.loadData();const M=this.MODELS[id];const p={screen:'editor',model:id,title:M.title,pasteOpen:false,mode:'matrix'};
     if(M.fam==='t'){const E=this.EX;Object.assign(p,{src:[...E.src],dst:[...E.dst],costs:E.costs.map(r=>r.slice()),supply:[...E.supply],demand:[...E.demand]});}
     if(M.fam==='a')p.asg=this.asgSample();
     if(M.fam==='l')p.list=this.listSample(id);
     if(M.fam==='g')p.graph=this.graphSample(id);
     if(M.fam==='p')p.pref=this.prefSample(id);
-    if(M.fam==='gf')p.gift=this.giftSample();
+    if(M.fam==='gf'){const sv=fresh?null:this.giftLoad();if(sv){p.gift={gifts:sv.gifts,friends:sv.friends||[],given:sv.given||[],sel:null,drag:null,over:null,newG:'',newQ:1};if(sv.title)p.title=sv.title;}else p.gift=this.giftSample();this.giftSave(p.gift,p.title);}
     this.setState(p);}
   mutAsg(f){const a=this.state.asg;const n={rows:[...a.rows],cols:[...a.cols],costs:a.costs.map(r=>r.slice())};f(n);this.setState({asg:n});}
   mutList(f){const l=this.state.list;const n={...l,items:l.items.map(it=>it.slice())};f(n);this.setState({list:n});}
@@ -908,7 +908,9 @@ class Component extends DCLogic {
   normGift(g){if(!g)return null;if(Array.isArray(g.given))return g;
     const gifts=[],given=[];(g.gifts||[]).forEach(x=>{gifts.push({n:x.n,q:Math.max(1,+x.q||1)});if(x.to!=null)given.push({g:gifts.length-1,to:x.to});});
     return{...g,gifts,given,newQ:1,drag:null,over:null};}
-  mutGift(f){const g=this.normGift(this.state.gift);const n={...g,gifts:(g.gifts||[]).map(x=>({...x})),given:(g.given||[]).map(x=>({...x})),friends:[...(g.friends||[])]};f(n);this.setState({gift:n});}
+  giftSave(g,title){try{localStorage.setItem('argmin-gift-v1',JSON.stringify({gifts:g.gifts||[],friends:g.friends||[],given:g.given||[],title:title||this.state.title}));}catch(e){}}
+  giftLoad(){try{const d=JSON.parse(localStorage.getItem('argmin-gift-v1')||'null');return d&&Array.isArray(d.gifts)?d:null;}catch(e){return null;}}
+  mutGift(f){const g=this.normGift(this.state.gift);const n={...g,gifts:(g.gifts||[]).map(x=>({...x})),given:(g.given||[]).map(x=>({...x})),friends:[...(g.friends||[])]};f(n);this.setState({gift:n});this.giftSave(n,this.state.title);}
   mutPref(f){const q=this.state.pref;const n={...q,left:q.left.map(x=>({n:x.n,p:[...x.p]})),right:q.right.map(x=>({n:x.n,p:[...x.p]}))};f(n);this.setState({pref:n});}
   renderVals(){
     const st=this.state,P=this.props,h=React.createElement;
@@ -1133,8 +1135,8 @@ class Component extends DCLogic {
       isHome:scr==='home',isEdT:scr==='editor'&&fam==='t',isEdA:scr==='editor'&&fam==='a',isEdL:scr==='editor'&&fam==='l',isEdG:scr==='editor'&&fam==='g',isEdP:scr==='editor'&&fam==='p',isEdGift:scr==='editor'&&fam==='gf',isResults:scr==='results'&&!famG,isResultsG:scr==='results'&&famG,isSaved:scr==='saved',
       wizOpen:st.wizOpen,onWizToggle:()=>this.setState({wizOpen:!st.wizOpen}),wizBtn:st.wizOpen?'Close':'Help me choose',
       wizChips,hasRec:!!st.wiz,recT:st.wiz?recs[st.wiz].t:'',recW:st.wiz?recs[st.wiz].w:'',
-      title:st.title,onTitle:e=>this.setState({title:e.target.value}),
-      onLoadExample:()=>this.openModel(st.model),
+      title:st.title,onTitle:e=>{const t=e.target.value;this.setState({title:t});if(fam==='gf'&&st.gift)this.giftSave(this.normGift(st.gift),t);},
+      onLoadExample:()=>this.openModel(st.model,true),
       pasteBtnS:'padding:8px 13px;border:1px solid '+(st.pasteOpen?'var(--mut)':'var(--line)')+';border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500',
       onPasteToggle:()=>this.setState({pasteOpen:!st.pasteOpen}),pasteOpen:st.pasteOpen,pasteTxt:st.pasteTxt,
       onPasteTxt:e=>this.setState({pasteTxt:e.target.value}),onPasteApply:()=>this.applyPaste(),
