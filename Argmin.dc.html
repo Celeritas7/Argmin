@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>argmin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231b2129'/%3E%3Crect x='23' y='23' width='18' height='18' fill='%23ff7a45' transform='rotate(45 32 32)'/%3E%3C/svg%3E">
 <script src="./support.js"></script>
 </head>
 <body>
@@ -502,19 +504,20 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
   </div>
   <div style="display:flex;align-items:center;gap:10px;margin:12px 0 18px;flex-wrap:wrap">
     <span style="{{ gfBadgeS }}">{{ gfBadgeT }}</span>
-    <span style="font-size:12px;color:var(--mut)">Drag a gift onto a friend — or click to pick it up, then click a friend. Use +/− for multiple copies of the same gift.</span>
+    <span style="font-size:12px;color:var(--mut)">Drag a gift onto a friend — or click to pick it up, then click a friend. Use +/− for copies of the same gift, × to delete it.</span>
   </div>
   <div style="display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start">
     <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px">
       <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut)">GIFTS LEFT · {{ gfLeft }}</div>
       <div style="display:flex;flex-direction:column;gap:7px;margin-top:10px">
         <sc-for list="{{ gfPool }}" as="g" hint-placeholder-count="5">
-          <div draggable="{{ true }}" onDragStart="{{ g.onDragStart }}" onDragEnd="{{ g.onDragEnd }}" onClick="{{ g.on }}" style="{{ g.style }}">
+          <div draggable="{{ true }}" onDragStart="{{ g.onDragStart }}" onDragEnd="{{ g.onDragEnd }}" onClick="{{ g.on }}" style="{{ g.style }}" style-hover="{{ g.hoverS }}">
             <span style="flex:1;min-width:0">{{ g.name }}</span>
             <span style="{{ g.qtyStyle }}">{{ g.qtyTxt }}</span>
             <span style="display:flex;gap:3px;flex:none">
-              <button onClick="{{ g.onDec }}" title="Fewer copies — removes the gift at zero" style="{{ g.stepStyle }}">−</button>
-              <button onClick="{{ g.onInc }}" title="More copies" style="{{ g.stepStyle }}">+</button>
+              <button onClick="{{ g.onDec }}" title="Fewer copies" style="{{ g.stepStyle }}" style-hover="{{ g.stepHover }}">−</button>
+              <button onClick="{{ g.onInc }}" title="More copies" style="{{ g.stepStyle }}" style-hover="{{ g.stepHover }}">+</button>
+              <button onClick="{{ g.onDelete }}" title="Delete gift" style="{{ g.delStyle }}" style-hover="{{ g.delHover }}">×</button>
             </span>
           </div>
         </sc-for>
@@ -525,12 +528,12 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
       <div style="display:flex;gap:8px;margin-top:12px">
         <input value="{{ gfNew }}" onChange="{{ onGfNew }}" onKeyDown="{{ onGfKey }}" placeholder="New gift…" style="flex:1;min-width:0;padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:12.5px;outline:none" style-focus="border-color:var(--mut)">
         <input value="{{ gfNewQ }}" onChange="{{ onGfNewQ }}" onKeyDown="{{ onGfKey }}" inputMode="numeric" title="How many copies" style="width:46px;flex:none;padding:8px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-align:center;outline:none" style-focus="border-color:var(--mut)">
-        <button onClick="{{ onGfAdd }}" style="padding:8px 13px;border:none;border-radius:8px;background:var(--ink);color:var(--bg);cursor:pointer;font-size:12.5px;font-weight:600">Add</button>
+        <button onClick="{{ onGfAdd }}" style="padding:8px 13px;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font-size:12.5px;font-weight:600" style-hover="filter:brightness(1.1)">Add</button>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;align-items:start">
       <sc-for list="{{ gfFriends }}" as="f" hint-placeholder-count="3">
-        <div onClick="{{ f.onAssign }}" onDragOver="{{ f.onDragOver }}" onDragLeave="{{ f.onDragLeave }}" onDrop="{{ f.onDrop }}" style="{{ f.style }}">
+        <div onClick="{{ f.onAssign }}" onDragOver="{{ f.onDragOver }}" onDragLeave="{{ f.onDragLeave }}" onDrop="{{ f.onDrop }}" style="{{ f.style }}" style-hover="{{ f.hoverS }}">
           <div style="display:flex;align-items:center;gap:8px">
             <input value="{{ f.name }}" onChange="{{ f.onName }}" onClick="{{ f.stop }}" style="flex:1;min-width:0;background:none;border:none;outline:none;font-size:13.5px;font-weight:600;padding:2px 4px" style-focus="background:var(--head);border-radius:5px">
             <span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--mut);background:var(--head);border-radius:999px;padding:2px 8px">{{ f.count }}</span>
@@ -1089,14 +1092,19 @@ class Component extends DCLogic {
       const q=gfQ(x.i),left=gfLeftOf(x.i),act=gfSel===x.i||gfDrag===x.i;
       return{name:x.g.n,
         qtyTxt:q>1?left+' of '+q:'',
-        qtyStyle:q>1?("flex:none;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:999px;"+(act?'background:rgba(255,255,255,0.22);color:#fff':'background:var(--head);color:var(--mut)')):'display:none',
+        qtyStyle:q>1?("flex:none;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:999px;"+(act?'background:rgba(255,255,255,0.22);color:#fff':'background:color-mix(in oklab, var(--accent) 12%, var(--surface));color:var(--accent)')):'display:none',
         stepStyle:'width:20px;height:20px;border-radius:6px;cursor:pointer;font-size:12px;line-height:1;padding:0;border:1px solid '+(act?'rgba(255,255,255,0.4);background:transparent;color:#fff':'var(--line);background:var(--surface);color:var(--mut)'),
         style:'display:flex;align-items:center;gap:8px;text-align:left;padding:8px 8px 8px 12px;border-radius:9px;cursor:grab;font-size:13px;font-weight:500;user-select:none;border:1px solid '+(act?'var(--accent);background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.18)':'var(--line);background:var(--surface);color:var(--ink)'),
         on:()=>this.mutGift(n=>{n.sel=n.sel===x.i?null:x.i;}),
         onDragStart:e=>{if(e.dataTransfer){e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',String(x.i));}catch(err){}}this.mutGift(n=>{n.drag=x.i;n.sel=x.i;});},
         onDragEnd:()=>this.mutGift(n=>{n.drag=null;n.over=null;}),
         onInc:e=>{e.stopPropagation();this.mutGift(n=>{n.gifts[x.i].q=Math.max(1,+n.gifts[x.i].q||1)+1;});},
-        onDec:e=>{e.stopPropagation();this.mutGift(n=>{const used=n.given.filter(y=>y.g===x.i).length;const q=Math.max(1,+n.gifts[x.i].q||1);if(q<=1&&used===0){n.gifts.splice(x.i,1);n.given=n.given.map(y=>y.g>x.i?{...y,g:y.g-1}:y);n.sel=n.sel===x.i?null:(n.sel>x.i?n.sel-1:n.sel);n.drag=n.drag===x.i?null:(n.drag>x.i?n.drag-1:n.drag);}else n.gifts[x.i].q=Math.max(1,used,q-1);});}};});
+        onDec:e=>{e.stopPropagation();this.mutGift(n=>{const used=n.given.filter(y=>y.g===x.i).length;n.gifts[x.i].q=Math.max(1,used,Math.max(1,+n.gifts[x.i].q||1)-1);});},
+        onDelete:e=>{e.stopPropagation();this.mutGift(n=>{n.gifts.splice(x.i,1);n.given=n.given.filter(y=>y.g!==x.i).map(y=>y.g>x.i?{...y,g:y.g-1}:y);n.sel=n.sel===x.i?null:(n.sel!=null&&n.sel>x.i?n.sel-1:n.sel);n.drag=n.drag===x.i?null:(n.drag!=null&&n.drag>x.i?n.drag-1:n.drag);});},
+        hoverS:act?'':'border-color:var(--accent);box-shadow:0 1px 4px color-mix(in oklab, var(--accent) 25%, transparent)',
+        stepHover:act?'background:rgba(255,255,255,0.18)':'border-color:var(--accent);color:var(--accent)',
+        delStyle:'flex:none;width:20px;height:20px;border:none;border-radius:6px;background:none;cursor:pointer;font-size:12.5px;line-height:1;padding:0;color:'+(act?'rgba(255,255,255,0.75)':'var(--mut)'),
+        delHover:act?'background:rgba(255,255,255,0.18);color:#fff':'background:color-mix(in oklab, var(--rose) 12%, var(--surface));color:var(--rose)'};});
     const gfTotal=GFg.reduce((a,_,i)=>a+gfQ(i),0),gfDone=GFv.length,gfLeftN=gfTotal-gfDone;
     const gfAdd=()=>{const t=(GF.newG||'').trim();if(!t)return;const q=Math.max(1,Math.min(99,+GF.newQ||1));this.mutGift(n=>{n.gifts.push({n:t,q});n.newG='';n.newQ=1;});};
     const gfFriends=GF.friends.map((fn,fi)=>{const mine=GFv.map((x,vi)=>({x,vi})).filter(o=>o.x.to===fi);const isOver=GF.over===fi;
@@ -1110,6 +1118,7 @@ class Component extends DCLogic {
           if(gi==null&&e.dataTransfer){const t=e.dataTransfer.getData('text/plain');if(t!=='')gi=+t;}
           if(gi==null)gi=gfSel;gfGive(gi,fi);},
         style:'background:'+(isOver?'color-mix(in oklab, var(--accent) 7%, var(--surface))':'var(--surface)')+';border-radius:12px;padding:14px 14px 12px;box-shadow:inset 0 0 0 '+(isOver?'2px var(--accent)':(gfArmed?'1.5px color-mix(in oklab, var(--accent) 50%, var(--line))':'1px var(--line)'))+';cursor:'+(gfSel!=null?'pointer':'default'),
+        hoverS:gfSel!=null?'box-shadow:inset 0 0 0 2px var(--accent);background:color-mix(in oklab, var(--accent) 6%, var(--surface))':'',
         hint:mine.length?'':(isOver?'Drop to give':(gfArmed?'Drop or click to give':'Drag a gift here')),
         gifts:mine.map(o=>({name:GFg[o.x.g]?GFg[o.x.g].n:'?',onRemove:e=>{e.stopPropagation();this.mutGift(n=>{n.given.splice(o.vi,1);});}}))};});
     const pLRows=mkPref(Pf.left,Pf.right,'left'),pRRows=mkPref(Pf.right,Pf.left,'right');
