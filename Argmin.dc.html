@@ -868,6 +868,8 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 <script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;\&quot;light\&quot; | \&quot;dark\&quot;&quot;,&quot;section&quot;:&quot;Appearance&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;options&quot;:[&quot;#d9480f&quot;,&quot;#0f766e&quot;,&quot;#4263eb&quot;,&quot;#c2255c&quot;],&quot;default&quot;:&quot;#d9480f&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Appearance&quot;},&quot;showDeltas&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Results&quot;}}">
 class Component extends DCLogic {
   rootRef = React.createRef();
+  SUPA_URL='https://wylxvmkcrexwfpjpbhyy.supabase.co';
+  SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5bHh2bWtjcmV4d2ZwanBiaHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2MzkxMDYsImV4cCI6MjA4NDIxNTEwNn0.6Bxo42hx4jwlJGWnfjiTpiDUsYfc1QLTN3YtrU1efak';
   loadData(){if(!this._dp)this._dp=Promise.all([import('./problems/transportation/data.js'),import('./problems/graphs/data.js'),import('./problems/assignment/data.js'),import('./problems/lists/data.js'),import('./problems/matching/data.js'),import('./problems/gifts/data.js')]).then(([t,g,a,l,p,gf])=>{this.EX=t.EX;this.FINAL=t.FINAL;this.STEPS=t.STEPS;this.GN=g.GN;this.GEC=g.GEC;this.GR=g.GR;this.graphSample=g.graphSample;this.asgSample=a.asgSample;this.listSample=l.listSample;this.prefSample=p.prefSample;this.giftSample=gf.giftSample;this.forceUpdate();});return this._dp;}
   state = {screen:'home',model:'transportation',asg:null,list:null,graph:null,pref:null,themeO:null,tab:'steps',step:1,mode:'matrix',hover:null,wiz:null,wizOpen:false,pasteOpen:false,pasteTxt:'',title:'Denver network',method:'nw',
     src:['Denver','Chicago','Atlanta'],dst:['Boston','Newark','Miami','Austin'],costs:[[3,1,7,4],[2,6,5,9],[8,3,3,2]],supply:[300,400,500],demand:[250,350,400,200]};
@@ -900,7 +902,7 @@ class Component extends DCLogic {
     if(M.fam==='l')p.list=this.listSample(id);
     if(M.fam==='g')p.graph=this.graphSample(id);
     if(M.fam==='p')p.pref=this.prefSample(id);
-    if(M.fam==='gf'){const sv=fresh?null:this.giftLoad();if(sv){p.gift={gifts:sv.gifts,friends:sv.friends||[],given:sv.given||[],sel:null,drag:null,over:null,newG:'',newQ:1};if(sv.title)p.title=sv.title;}else p.gift=this.giftSample();this.giftSave(p.gift,p.title);}
+    if(M.fam==='gf'){const sv=fresh?null:this.giftLoad();if(sv){p.gift={gifts:sv.gifts,friends:sv.friends||[],given:sv.given||[],sel:null,drag:null,over:null,newG:'',newQ:1};if(sv.title)p.title=sv.title;}else p.gift=this.giftSample();if(fresh)this.giftSave(p.gift,p.title);else{this._giftDirty=false;this.supaLoad();}}
     this.setState(p);}
   mutAsg(f){const a=this.state.asg;const n={rows:[...a.rows],cols:[...a.cols],costs:a.costs.map(r=>r.slice())};f(n);this.setState({asg:n});}
   mutList(f){const l=this.state.list;const n={...l,items:l.items.map(it=>it.slice())};f(n);this.setState({list:n});}
@@ -908,7 +910,11 @@ class Component extends DCLogic {
   normGift(g){if(!g)return null;if(Array.isArray(g.given))return g;
     const gifts=[],given=[];(g.gifts||[]).forEach(x=>{gifts.push({n:x.n,q:Math.max(1,+x.q||1)});if(x.to!=null)given.push({g:gifts.length-1,to:x.to});});
     return{...g,gifts,given,newQ:1,drag:null,over:null};}
-  giftSave(g,title){try{localStorage.setItem('argmin-gift-v1',JSON.stringify({gifts:g.gifts||[],friends:g.friends||[],given:g.given||[],title:title||this.state.title}));}catch(e){}}
+  giftSave(g,title){this._giftDirty=true;const data={gifts:g.gifts||[],friends:g.friends||[],given:g.given||[],title:title||this.state.title};
+    try{localStorage.setItem('argmin-gift-v1',JSON.stringify(data));}catch(e){}
+    clearTimeout(this._supaT);this._supaT=setTimeout(()=>{fetch(this.SUPA_URL+'/rest/v1/gift_boards',{method:'POST',headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id:'default',data,updated_at:new Date().toISOString()})}).catch(()=>{});},600);}
+  async supaLoad(){try{const r=await fetch(this.SUPA_URL+'/rest/v1/gift_boards?id=eq.default&select=data',{headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY}});const rows=await r.json();const d=rows&&rows[0]&&rows[0].data;
+    if(d&&Array.isArray(d.gifts)&&!this._giftDirty){this.setState({gift:{gifts:d.gifts,friends:d.friends||[],given:d.given||[],sel:null,drag:null,over:null,newG:'',newQ:1},title:d.title||this.state.title});try{localStorage.setItem('argmin-gift-v1',JSON.stringify(d));}catch(e){}}}catch(e){}}
   giftLoad(){try{const d=JSON.parse(localStorage.getItem('argmin-gift-v1')||'null');return d&&Array.isArray(d.gifts)?d:null;}catch(e){return null;}}
   mutGift(f){const g=this.normGift(this.state.gift);const n={...g,gifts:(g.gifts||[]).map(x=>({...x})),given:(g.given||[]).map(x=>({...x})),friends:[...(g.friends||[])]};f(n);this.setState({gift:n});this.giftSave(n,this.state.title);}
   mutPref(f){const q=this.state.pref;const n={...q,left:q.left.map(x=>({n:x.n,p:[...x.p]})),right:q.right.map(x=>({n:x.n,p:[...x.p]}))};f(n);this.setState({pref:n});}
