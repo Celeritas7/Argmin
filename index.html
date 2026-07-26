@@ -513,7 +513,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
             <span style="flex:1;min-width:0">{{ g.name }}</span>
             <span style="{{ g.qtyStyle }}">{{ g.qtyTxt }}</span>
             <span style="display:flex;gap:3px;flex:none">
-              <button onClick="{{ g.onDec }}" title="Fewer copies" style="{{ g.stepStyle }}">−</button>
+              <button onClick="{{ g.onDec }}" title="Fewer copies — removes the gift at zero" style="{{ g.stepStyle }}">−</button>
               <button onClick="{{ g.onInc }}" title="More copies" style="{{ g.stepStyle }}">+</button>
             </span>
           </div>
@@ -1096,7 +1096,7 @@ class Component extends DCLogic {
         onDragStart:e=>{if(e.dataTransfer){e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',String(x.i));}catch(err){}}this.mutGift(n=>{n.drag=x.i;n.sel=x.i;});},
         onDragEnd:()=>this.mutGift(n=>{n.drag=null;n.over=null;}),
         onInc:e=>{e.stopPropagation();this.mutGift(n=>{n.gifts[x.i].q=Math.max(1,+n.gifts[x.i].q||1)+1;});},
-        onDec:e=>{e.stopPropagation();this.mutGift(n=>{const used=n.given.filter(y=>y.g===x.i).length;n.gifts[x.i].q=Math.max(1,used,Math.max(1,+n.gifts[x.i].q||1)-1);});}};});
+        onDec:e=>{e.stopPropagation();this.mutGift(n=>{const used=n.given.filter(y=>y.g===x.i).length;const q=Math.max(1,+n.gifts[x.i].q||1);if(q<=1&&used===0){n.gifts.splice(x.i,1);n.given=n.given.map(y=>y.g>x.i?{...y,g:y.g-1}:y);n.sel=n.sel===x.i?null:(n.sel>x.i?n.sel-1:n.sel);n.drag=n.drag===x.i?null:(n.drag>x.i?n.drag-1:n.drag);}else n.gifts[x.i].q=Math.max(1,used,q-1);});}};});
     const gfTotal=GFg.reduce((a,_,i)=>a+gfQ(i),0),gfDone=GFv.length,gfLeftN=gfTotal-gfDone;
     const gfAdd=()=>{const t=(GF.newG||'').trim();if(!t)return;const q=Math.max(1,Math.min(99,+GF.newQ||1));this.mutGift(n=>{n.gifts.push({n:t,q});n.newG='';n.newQ=1;});};
     const gfFriends=GF.friends.map((fn,fi)=>{const mine=GFv.map((x,vi)=>({x,vi})).filter(o=>o.x.to===fi);const isOver=GF.over===fi;

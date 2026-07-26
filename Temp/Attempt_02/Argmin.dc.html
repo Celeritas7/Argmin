@@ -513,7 +513,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
             <span style="flex:1;min-width:0">{{ g.name }}</span>
             <span style="{{ g.qtyStyle }}">{{ g.qtyTxt }}</span>
             <span style="display:flex;gap:3px;flex:none">
-              <button onClick="{{ g.onDec }}" title="Fewer copies — removes the gift at zero" style="{{ g.stepStyle }}">−</button>
+              <button onClick="{{ g.onDec }}" title="Fewer copies" style="{{ g.stepStyle }}">−</button>
               <button onClick="{{ g.onInc }}" title="More copies" style="{{ g.stepStyle }}">+</button>
             </span>
           </div>
@@ -902,10 +902,7 @@ class Component extends DCLogic {
   mutAsg(f){const a=this.state.asg;const n={rows:[...a.rows],cols:[...a.cols],costs:a.costs.map(r=>r.slice())};f(n);this.setState({asg:n});}
   mutList(f){const l=this.state.list;const n={...l,items:l.items.map(it=>it.slice())};f(n);this.setState({list:n});}
   mutGraph(f){const g=this.state.graph;const n={...g,nodes:g.nodes.map(x=>({...x})),edges:g.edges.map(x=>({...x}))};f(n);this.setState({graph:n});}
-  normGift(g){if(!g)return null;if(Array.isArray(g.given))return g;
-    const gifts=[],given=[];(g.gifts||[]).forEach(x=>{gifts.push({n:x.n,q:Math.max(1,+x.q||1)});if(x.to!=null)given.push({g:gifts.length-1,to:x.to});});
-    return{...g,gifts,given,newQ:1,drag:null,over:null};}
-  mutGift(f){const g=this.normGift(this.state.gift);const n={...g,gifts:(g.gifts||[]).map(x=>({...x})),given:(g.given||[]).map(x=>({...x})),friends:[...(g.friends||[])]};f(n);this.setState({gift:n});}
+  mutGift(f){const g=this.state.gift;const n={...g,gifts:(g.gifts||[]).map(x=>({...x})),given:(g.given||[]).map(x=>({...x})),friends:[...(g.friends||[])]};f(n);this.setState({gift:n});}
   mutPref(f){const q=this.state.pref;const n={...q,left:q.left.map(x=>({n:x.n,p:[...x.p]})),right:q.right.map(x=>({n:x.n,p:[...x.p]}))};f(n);this.setState({pref:n});}
   renderVals(){
     const st=this.state,P=this.props,h=React.createElement;
@@ -1076,7 +1073,7 @@ class Component extends DCLogic {
         style:chipB+(rank===0?';border-color:color-mix(in oklab, var(--accent) 45%, var(--line))':''),
         rankS:"flex:none;width:16px;height:16px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;"+(rank===0?'background:var(--accent);color:#fff':'background:var(--head);color:var(--mut)')}))}));
     // gift board
-    const GF=this.normGift(st.gift)||{gifts:[],friends:[],given:[],sel:null,drag:null,over:null,newG:'',newQ:1};
+    const GF=st.gift||{gifts:[],friends:[],given:[],sel:null,drag:null,over:null,newG:'',newQ:1};
     const GFg=GF.gifts||[],GFv=GF.given||[];
     const gfSel=GF.sel,gfDrag=GF.drag,gfArmed=gfSel!=null||gfDrag!=null;
     const gfQ=i=>Math.max(1,+GFg[i].q||1);
@@ -1096,7 +1093,7 @@ class Component extends DCLogic {
         onDragStart:e=>{if(e.dataTransfer){e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',String(x.i));}catch(err){}}this.mutGift(n=>{n.drag=x.i;n.sel=x.i;});},
         onDragEnd:()=>this.mutGift(n=>{n.drag=null;n.over=null;}),
         onInc:e=>{e.stopPropagation();this.mutGift(n=>{n.gifts[x.i].q=Math.max(1,+n.gifts[x.i].q||1)+1;});},
-        onDec:e=>{e.stopPropagation();this.mutGift(n=>{const used=n.given.filter(y=>y.g===x.i).length;const q=Math.max(1,+n.gifts[x.i].q||1);if(q<=1&&used===0){n.gifts.splice(x.i,1);n.given=n.given.map(y=>y.g>x.i?{...y,g:y.g-1}:y);n.sel=n.sel===x.i?null:(n.sel>x.i?n.sel-1:n.sel);n.drag=n.drag===x.i?null:(n.drag>x.i?n.drag-1:n.drag);}else n.gifts[x.i].q=Math.max(1,used,q-1);});}};});
+        onDec:e=>{e.stopPropagation();this.mutGift(n=>{const used=n.given.filter(y=>y.g===x.i).length;n.gifts[x.i].q=Math.max(1,used,Math.max(1,+n.gifts[x.i].q||1)-1);});}};});
     const gfTotal=GFg.reduce((a,_,i)=>a+gfQ(i),0),gfDone=GFv.length,gfLeftN=gfTotal-gfDone;
     const gfAdd=()=>{const t=(GF.newG||'').trim();if(!t)return;const q=Math.max(1,Math.min(99,+GF.newQ||1));this.mutGift(n=>{n.gifts.push({n:t,q});n.newG='';n.newQ=1;});};
     const gfFriends=GF.friends.map((fn,fi)=>{const mine=GFv.map((x,vi)=>({x,vi})).filter(o=>o.x.to===fi);const isOver=GF.over===fi;
