@@ -540,7 +540,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
             <button onClick="{{ f.onDel }}" title="Remove friend" style="flex:none;width:18px;height:18px;border:none;border-radius:5px;background:none;cursor:pointer;font-size:11px;line-height:1;color:var(--mut);padding:0" style-hover="background:var(--line2)">×</button>
           </div>
           <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
-            <sc-for list="{{ f.gifts }}" as="g"><span style="display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--head);font-size:12.5px;font-weight:500"><span style="flex:1;min-width:0">{{ g.name }}</span><button onClick="{{ g.onRemove }}" title="Take back" style="flex:none;width:16px;height:16px;border:none;border-radius:5px;background:none;cursor:pointer;font-size:10.5px;line-height:1;color:var(--mut);padding:0" style-hover="background:var(--line2)">×</button></span></sc-for>
+            <sc-for list="{{ f.gifts }}" as="g"><span draggable="{{ true }}" onDragStart="{{ g.onDragStart }}" onDragEnd="{{ g.onDragEnd }}" style="display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--head);font-size:12.5px;font-weight:500;cursor:grab;user-select:none" style-hover="border-color:var(--accent)"><span style="flex:1;min-width:0">{{ g.name }}</span><button onClick="{{ g.onRemove }}" title="Take back" style="flex:none;width:16px;height:16px;border:none;border-radius:5px;background:none;cursor:pointer;font-size:10.5px;line-height:1;color:var(--mut);padding:0" style-hover="background:var(--line2)">×</button></span></sc-for>
           </div>
           <div style="margin-top:8px;font-size:11.5px;color:var(--mut)">{{ f.hint }}</div>
         </div>
@@ -1122,13 +1122,18 @@ class Component extends DCLogic {
         onAssign:()=>{if(gfSel!=null)gfGive(gfSel,fi);},
         onDragOver:e=>{e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect='move';if(GF.over!==fi)this.mutGift(n=>{n.over=fi;});},
         onDragLeave:()=>{if(GF.over===fi)this.mutGift(n=>{n.over=null;});},
-        onDrop:e=>{e.preventDefault();let gi=gfDrag;
-          if(gi==null&&e.dataTransfer){const t=e.dataTransfer.getData('text/plain');if(t!=='')gi=+t;}
+        onDrop:e=>{e.preventDefault();let t='';if(e.dataTransfer){try{t=e.dataTransfer.getData('text/plain');}catch(err){}}
+          const dv=GF.dragV!=null?GF.dragV:(t&&t.slice(0,2)==='v:'?+t.slice(2):null);
+          if(dv!=null){this.mutGift(n=>{if(n.given[dv])n.given[dv].to=fi;n.dragV=null;n.sel=null;n.drag=null;n.over=null;});return;}
+          let gi=gfDrag;if(gi==null&&t!=='')gi=+t;
           if(gi==null)gi=gfSel;gfGive(gi,fi);},
         style:'background:'+(isOver?'color-mix(in oklab, var(--accent) 7%, var(--surface))':'var(--surface)')+';border-radius:12px;padding:14px 14px 12px;box-shadow:inset 0 0 0 '+(isOver?'2px var(--accent)':(gfArmed?'1.5px color-mix(in oklab, var(--accent) 50%, var(--line))':'1px var(--line)'))+';cursor:'+(gfSel!=null?'pointer':'default'),
         hoverS:gfSel!=null?'box-shadow:inset 0 0 0 2px var(--accent);background:color-mix(in oklab, var(--accent) 6%, var(--surface))':'',
         hint:mine.length?'':(isOver?'Drop to give':(gfArmed?'Drop or click to give':'Drag a gift here')),
-        gifts:mine.map(o=>({name:GFg[o.x.g]?GFg[o.x.g].n:'?',onRemove:e=>{e.stopPropagation();this.mutGift(n=>{n.given.splice(o.vi,1);});}}))};});
+        gifts:mine.map(o=>({name:GFg[o.x.g]?GFg[o.x.g].n:'?',
+          onDragStart:e=>{if(e.dataTransfer){e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain','v:'+o.vi);}catch(err){}}this.mutGift(n=>{n.dragV=o.vi;});},
+          onDragEnd:()=>this.mutGift(n=>{n.dragV=null;n.over=null;}),
+          onRemove:e=>{e.stopPropagation();this.mutGift(n=>{n.given.splice(o.vi,1);});}}))};});
     const pLRows=mkPref(Pf.left,Pf.right,'left'),pRRows=mkPref(Pf.right,Pf.left,'right');
     const pEq=Pf.left.length===Pf.right.length;
     const addP=key=>this.mutPref(x=>{const ok2=key==='left'?'right':'left';const one=key==='left'?x.lOne:x.rOne;const idx=x[key].length;x[key].push({n:one.charAt(0).toUpperCase()+one.slice(1)+' '+(idx+1),p:x[ok2].map((_,j)=>j)});x[ok2].forEach(o=>o.p.push(idx));});
