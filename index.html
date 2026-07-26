@@ -500,7 +500,40 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
   <div style="display:flex;align-items:center;gap:10px;margin-top:4px;flex-wrap:wrap">
     <input value="{{ title }}" onChange="{{ onTitle }}" style="font-size:21px;font-weight:600;letter-spacing:-0.01em;background:none;border:none;outline:none;padding:2px 0;min-width:180px;flex:1" style-focus="background:var(--head);border-radius:6px">
     <button onClick="{{ onLoadExample }}" style="padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500" style-hover="border-color:var(--mut)">Load example</button>
-    <button onClick="{{ onGfSpread }}" style="padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500" style-hover="border-color:var(--mut)">Spread the rest evenly</button>
+    <button onClick="{{ onGfSpread }}" style="{{ gfSpreadS }}" style-hover="border-color:var(--mut)">Spread the rest evenly</button>
+  </div>
+
+  <sc-if value="{{ gfIsFolders }}" hint-placeholder-val="{{ true }}">
+  <div style="margin-top:16px">
+    <div style="font-size:12px;color:var(--mut);margin-bottom:14px">One folder per occasion — open one to plan its gifts.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;align-items:start">
+      <sc-for list="{{ gfFolders }}" as="o" hint-placeholder-count="3">
+        <div onClick="{{ o.on }}" style="{{ o.cardS }}" style-hover="{{ o.cardHover }}">
+          <div style="display:flex;align-items:center;gap:6px">
+            <input value="{{ o.name }}" onChange="{{ o.onName }}" onClick="{{ o.stop }}" style="flex:1;min-width:0;background:none;border:none;outline:none;padding:2px 4px;margin:-2px -4px;font-family:inherit;font-size:15px;font-weight:600;letter-spacing:-0.01em;color:var(--ink)" style-focus="background:var(--head);border-radius:6px" />
+            <button onClick="{{ o.onDel }}" title="Delete occasion" style="{{ o.delS }}" style-hover="background:var(--line2);color:var(--rose)">×</button>
+          </div>
+          <div style="font-size:12.5px;color:var(--mut)">{{ o.meta }}</div>
+          <div style="{{ o.barS }}"><div style="{{ o.barFillS }}"></div></div>
+          <div style="{{ o.statS }}">{{ o.stat }}</div>
+        </div>
+      </sc-for>
+      <button onClick="{{ onGfAddOcc }}" style="min-height:124px;border:1px dashed var(--line);border-radius:12px;background:none;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--accent);color:var(--accent)">+ New occasion</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ gfIsBoard }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;align-items:center;gap:8px;margin:14px 0 0;flex-wrap:wrap">
+    <button onClick="{{ onGfBack }}" style="padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--mut);color:var(--ink)">← All occasions</button>
+    <sc-for list="{{ gfOccs }}" as="o" hint-placeholder-count="2">
+      <div onClick="{{ o.on }}" style="{{ o.wrapS }}" style-hover="{{ o.hoverS }}">
+        <input value="{{ o.name }}" onChange="{{ o.onName }}" style="{{ o.inputS }}" />
+        <span style="{{ o.cntS }}">{{ o.cnt }}</span>
+        <button onClick="{{ o.onDel }}" title="Delete occasion" style="{{ o.delS }}" style-hover="{{ o.delHover }}">×</button>
+      </div>
+    </sc-for>
+    <button onClick="{{ onGfAddOcc }}" style="padding:7px 12px;border:1px dashed var(--line);border-radius:999px;background:none;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--accent);color:var(--accent)">+ Occasion</button>
   </div>
   <div style="display:flex;align-items:center;gap:10px;margin:12px 0 18px;flex-wrap:wrap">
     <span style="{{ gfBadgeS }}">{{ gfBadgeT }}</span>
@@ -548,6 +581,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
       <button onClick="{{ onGfAddFriend }}" style="min-height:110px;border:1px dashed var(--line);border-radius:12px;background:none;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--accent);color:var(--accent)">+ Add friend</button>
     </div>
   </div>
+  </sc-if>
 </div>
 </sc-if>
 
@@ -902,21 +936,28 @@ class Component extends DCLogic {
     if(M.fam==='l')p.list=this.listSample(id);
     if(M.fam==='g')p.graph=this.graphSample(id);
     if(M.fam==='p')p.pref=this.prefSample(id);
-    if(M.fam==='gf'){const sv=fresh?null:this.giftLoad();if(sv){p.gift={gifts:sv.gifts,friends:sv.friends||[],given:sv.given||[],sel:null,drag:null,over:null,newG:'',newQ:1};if(sv.title)p.title=sv.title;}else p.gift=this.giftSample();if(fresh)this.giftSave(p.gift,p.title);else{this._giftDirty=false;this.supaLoad();}}
+    if(M.fam==='gf'){const sv=fresh?null:this.giftLoad();if(sv){p.gift=this.normGift({...sv,sel:null,drag:null,over:null,newG:'',newQ:1});if(sv.title)p.title=sv.title;}else p.gift=this.giftSample();if(fresh)this.giftSave(p.gift,p.title);else{this._giftDirty=false;this.supaLoad();}}
     else{this._dirty=this._dirty||{};if(fresh){this._dirty[id]=true;this.setState(p);this.saveCur(p);return;}const sv2=this.loadLocalModel(id);if(sv2)this.applyRec(id,M.fam,sv2,p);this._dirty[id]=false;this.supaLoadModel(id,M.fam);}
     this.setState(p);}
   mutAsg(f){const a=this.state.asg;const n={rows:[...a.rows],cols:[...a.cols],costs:a.costs.map(r=>r.slice())};f(n);this.setState({asg:n});this.saveCur({asg:n});}
   mutList(f){const l=this.state.list;const n={...l,items:l.items.map(it=>it.slice())};f(n);this.setState({list:n});this.saveCur({list:n});}
   mutGraph(f){const g=this.state.graph;const n={...g,nodes:g.nodes.map(x=>({...x})),edges:g.edges.map(x=>({...x}))};f(n);this.setState({graph:n});this.saveCur({graph:n});}
-  normGift(g){if(!g)return null;if(Array.isArray(g.given))return g;
-    const gifts=[],given=[];(g.gifts||[]).forEach(x=>{gifts.push({n:x.n,q:Math.max(1,+x.q||1)});if(x.to!=null)given.push({g:gifts.length-1,to:x.to});});
-    return{...g,gifts,given,newQ:1,drag:null,over:null};}
-  giftSave(g,title){this._giftDirty=true;const data={gifts:g.gifts||[],friends:g.friends||[],given:g.given||[],title:title||this.state.title};
+  normGift(g){if(!g)return null;let n=g;
+    if(!Array.isArray(n.occs)){let b=n;
+      if(!Array.isArray(b.given)){const gifts=[],given=[];(b.gifts||[]).forEach(x=>{gifts.push({n:x.n,q:Math.max(1,+x.q||1)});if(x.to!=null)given.push({g:gifts.length-1,to:x.to});});b={...b,gifts,given};}
+      n={...n,occs:[{name:'Birthday',gifts:b.gifts||[],friends:b.friends||[],given:b.given||[]}],oi:0};}
+    const oi=Math.max(0,Math.min(n.occs.length-1,n.oi||0)),cur=n.occs[oi]||{};
+    return{...n,oi,view:n.view==='board'?'board':'folders',gifts:cur.gifts||[],friends:cur.friends||[],given:cur.given||[],newQ:n.newQ==null?1:n.newQ,drag:n.drag==null?null:n.drag,over:n.over==null?null:n.over};}
+  gfSwitch(i){this.mutGift(n=>{n.oi=i;n.view='board';});}
+  gfBack(){this.mutGift(n=>{n.view='folders';n.sel=null;n.drag=null;n.over=null;});}
+  gfAddOcc(){this.mutGift(n=>{n._skip=true;n.occs[n.oi]={...n.occs[n.oi],gifts:n.gifts,friends:n.friends,given:n.given};n.occs.push({name:'New occasion',gifts:[],friends:[...(n.friends||[])],given:[]});n.oi=n.occs.length-1;n.view='board';});}
+  gfDelOcc(i){this.mutGift(n=>{if(n.occs.length<=1)return;n._skip=true;n.occs[n.oi]={...n.occs[n.oi],gifts:n.gifts,friends:n.friends,given:n.given};n.occs.splice(i,1);n.oi=n.oi>i?n.oi-1:(n.oi===i?Math.min(i,n.occs.length-1):n.oi);});}
+  giftSave(g,title){this._giftDirty=true;const q=this.normGift(g);const data={occs:q.occs,oi:q.oi,title:title||this.state.title};
     try{localStorage.setItem('argmin-gift-v1',JSON.stringify(data));}catch(e){}
     clearTimeout(this._supaT);this._supaT=setTimeout(()=>{fetch(this.SUPA_URL+'/rest/v1/gift_boards',{method:'POST',headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id:'default',data,updated_at:new Date().toISOString()})}).catch(()=>{});},600);}
   async supaLoad(){try{const r=await fetch(this.SUPA_URL+'/rest/v1/gift_boards?id=eq.default&select=data',{headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY}});const rows=await r.json();const d=rows&&rows[0]&&rows[0].data;
-    if(d&&Array.isArray(d.gifts)&&!this._giftDirty){this.setState({gift:{gifts:d.gifts,friends:d.friends||[],given:d.given||[],sel:null,drag:null,over:null,newG:'',newQ:1},title:d.title||this.state.title});try{localStorage.setItem('argmin-gift-v1',JSON.stringify(d));}catch(e){}}}catch(e){}}
-  giftLoad(){try{const d=JSON.parse(localStorage.getItem('argmin-gift-v1')||'null');return d&&Array.isArray(d.gifts)?d:null;}catch(e){return null;}}
+    if(d&&(Array.isArray(d.occs)||Array.isArray(d.gifts))&&!this._giftDirty){this.setState({gift:this.normGift({...d,sel:null,drag:null,over:null,newG:'',newQ:1}),title:d.title||this.state.title});try{localStorage.setItem('argmin-gift-v1',JSON.stringify(d));}catch(e){}}}catch(e){}}
+  giftLoad(){try{const d=JSON.parse(localStorage.getItem('argmin-gift-v1')||'null');return d&&(Array.isArray(d.occs)||Array.isArray(d.gifts))?d:null;}catch(e){return null;}}
   setSave(p){this.setState(p);this.saveCur(p);}
   saveCur(over){const s={...this.state,...(over||{})};const id=s.model,fam=this.MODELS[id].fam;let data=null;
     if(fam==='t')data={src:s.src,dst:s.dst,costs:s.costs,supply:s.supply,demand:s.demand};
@@ -931,7 +972,15 @@ class Component extends DCLogic {
   async supaLoadModel(id,fam){try{const r=await fetch(this.SUPA_URL+'/rest/v1/gift_boards?id=eq.'+id+'&select=data',{headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY}});const rows=await r.json();const rec=rows&&rows[0]&&rows[0].data;
     if(!rec||(this._dirty&&this._dirty[id])||this.state.model!==id)return;const p={};this.applyRec(id,fam,rec,p);this.setState(p);
     try{localStorage.setItem('argmin-'+id,JSON.stringify(rec));}catch(e){}}catch(e){}}
-  mutGift(f){const g=this.normGift(this.state.gift);const n={...g,gifts:(g.gifts||[]).map(x=>({...x})),given:(g.given||[]).map(x=>({...x})),friends:[...(g.friends||[])]};f(n);this.setState({gift:n});this.giftSave(n,this.state.title);}
+  mutGift(f){const g=this.normGift(this.state.gift);
+    const n={...g,occs:(g.occs||[]).map(o=>({...o,gifts:(o.gifts||[]).map(x=>({...x})),given:(o.given||[]).map(x=>({...x})),friends:[...(o.friends||[])]})),gifts:(g.gifts||[]).map(x=>({...x})),given:(g.given||[]).map(x=>({...x})),friends:[...(g.friends||[])]};
+    const o0=n.oi||0;f(n);
+    if(!n._skip&&n.occs[o0]){n.occs[o0]={...n.occs[o0],gifts:n.gifts,friends:n.friends,given:n.given};}
+    delete n._skip;
+    const t=n.occs[n.oi]||n.occs[0]||{};
+    if((n.oi||0)!==o0){n.sel=null;n.drag=null;n.over=null;}
+    n.gifts=t.gifts||[];n.friends=t.friends||[];n.given=t.given||[];
+    this.setState({gift:n});this.giftSave(n,this.state.title);}
   mutPref(f){const q=this.state.pref;const n={...q,left:q.left.map(x=>({n:x.n,p:[...x.p]})),right:q.right.map(x=>({n:x.n,p:[...x.p]}))};f(n);this.setState({pref:n});this.saveCur({pref:n});}
   renderVals(){
     const st=this.state,P=this.props,h=React.createElement;
@@ -1102,7 +1151,37 @@ class Component extends DCLogic {
         style:chipB+(rank===0?';border-color:color-mix(in oklab, var(--accent) 45%, var(--line))':''),
         rankS:"flex:none;width:16px;height:16px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;"+(rank===0?'background:var(--accent);color:#fff':'background:var(--head);color:var(--mut)')}))}));
     // gift board
-    const GF=this.normGift(st.gift)||{gifts:[],friends:[],given:[],sel:null,drag:null,over:null,newG:'',newQ:1};
+    const GF=this.normGift(st.gift)||{occs:[],oi:0,gifts:[],friends:[],given:[],sel:null,drag:null,over:null,newG:'',newQ:1};
+    const gfOccs=(GF.occs||[]).map((o,i)=>{const oact=i===(GF.oi||0),many=(GF.occs||[]).length>1;
+      const otot=(o.gifts||[]).reduce((a,x)=>a+Math.max(1,+x.q||1),0),odone=(o.given||[]).length;
+      return{name:o.name||'Occasion',
+        wrapS:'display:flex;align-items:center;gap:7px;padding:7px 12px;border:1px solid '+(oact?'var(--ink)':'var(--line)')+';border-radius:999px;background:'+(oact?'var(--ink)':'var(--surface)')+';color:'+(oact?'var(--bg)':'var(--ink)')+';cursor:pointer',
+        hoverS:oact?'':'border-color:var(--accent)',
+        on:()=>{if(!oact)this.gfSwitch(i);},
+        inputS:"border:none;background:none;outline:none;padding:0;font-family:inherit;font-size:12.5px;font-weight:600;color:inherit;cursor:"+(oact?'text':'pointer')+";width:"+Math.max(5,(o.name||'').length+1)+"ch",
+        onName:e=>{const v=e.target.value;this.mutGift(n=>{n.occs[i]={...n.occs[i],name:v};});},
+        cnt:odone+'/'+otot,
+        cntS:"font-family:'IBM Plex Mono',monospace;font-size:10.5px;opacity:0.65",
+        delS:'border:none;background:none;cursor:pointer;font-size:12px;line-height:1;padding:0;color:inherit;opacity:'+(many?'0.55':'0')+';pointer-events:'+(many?'auto':'none'),
+        delHover:'opacity:1',
+        onDel:e=>{e.stopPropagation();this.gfDelOcc(i);}};});
+    const gfCol0=i=>['#e8590c','#0f766e','#4263eb','#c2255c','#9c36b5','#2f9e44'][i%6];
+    const gfFolders=(GF.occs||[]).map((o,i)=>{const many=(GF.occs||[]).length>1;
+      const tot=(o.gifts||[]).reduce((a,x)=>a+Math.max(1,+x.q||1),0),done=(o.given||[]).length,fr=(o.friends||[]).length;
+      const pct=tot?Math.round(done/tot*100):0;
+      return{name:o.name||'Occasion',
+        on:()=>this.gfSwitch(i),
+        cardS:'box-sizing:border-box;width:100%;display:flex;flex-direction:column;gap:10px;padding:16px 16px 15px;border:1px solid var(--line);border-top:3px solid '+gfCol0(i)+';border-radius:12px;background:var(--surface);cursor:pointer;text-align:left',
+        cardHover:'border-color:color-mix(in oklab, '+gfCol0(i)+' 45%, var(--line));border-top-color:'+gfCol0(i)+';box-shadow:0 3px 14px color-mix(in oklab, '+gfCol0(i)+' 14%, transparent)',
+        onName:e=>{const v=e.target.value;this.mutGift(n=>{n.occs[i]={...n.occs[i],name:v};});},
+        stop:e=>e.stopPropagation(),
+        meta:tot?(fmt(tot)+' gift'+(tot===1?'':'s')+' · '+fmt(fr)+' friend'+(fr===1?'':'s')):'Empty — add gifts',
+        barS:'height:4px;border-radius:999px;background:var(--head);overflow:hidden;display:'+(tot?'block':'none'),
+        barFillS:'height:100%;border-radius:999px;width:'+pct+'%;background:'+(tot&&done===tot?'var(--ok)':gfCol0(i)),
+        stat:tot?(done===tot?'All assigned':fmt(done)+' of '+fmt(tot)+' assigned'):'Nothing assigned yet',
+        statS:'font-family:\'IBM Plex Mono\',monospace;font-size:10.5px;letter-spacing:0.04em;color:'+(tot&&done===tot?'var(--ok)':'var(--mut)'),
+        delS:'flex:none;width:22px;height:22px;border:none;border-radius:6px;background:none;cursor:pointer;font-size:13px;line-height:1;color:var(--mut);padding:0;display:'+(many?'block':'none'),
+        onDel:e=>{e.stopPropagation();this.gfDelOcc(i);}};});
     const GFg=GF.gifts||[],GFv=GF.given||[];
     const gfSel=GF.sel,gfDrag=GF.drag,gfArmed=gfSel!=null||gfDrag!=null;
     const gfQ=i=>Math.max(1,+GFg[i].q||1);
@@ -1220,7 +1299,11 @@ class Component extends DCLogic {
         n.gifts.forEach((g,gi)=>{let left=Math.max(1,+g.q||1)-n.given.filter(y=>y.g===gi).length;
           while(left-->0){let m=0;counts.forEach((c,i)=>{if(c<counts[m])m=i;});n.given.push({g:gi,to:m});counts[m]++;}});
         n.sel=null;n.drag=null;n.over=null;}),
-      onGfAddFriend:()=>this.mutGift(n=>{n.friends.push('Friend '+(n.friends.length+1));})
+      onGfAddFriend:()=>this.mutGift(n=>{n.friends.push('Friend '+(n.friends.length+1));}),
+      gfOccs,gfFolders,onGfAddOcc:()=>this.gfAddOcc(),onGfBack:()=>this.gfBack(),
+      gfIsFolders:GF.view!=='board',gfIsBoard:GF.view==='board',
+      gfSpreadS:'padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500;display:'+(GF.view==='board'?'block':'none'),
+      gfOccName:((GF.occs||[])[GF.oi||0]||{}).name||'Occasion'
     };
   }
 }
