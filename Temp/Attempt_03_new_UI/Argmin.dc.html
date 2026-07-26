@@ -511,7 +511,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
       <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut)">GIFTS LEFT · {{ gfLeft }}</div>
       <div style="display:flex;flex-direction:column;gap:7px;margin-top:10px">
         <sc-for list="{{ gfPool }}" as="g" hint-placeholder-count="5">
-          <div draggable="{{ true }}" onDragStart="{{ g.onDragStart }}" onDragEnd="{{ g.onDragEnd }}" onClick="{{ g.on }}" style="{{ g.style }}" style-hover="{{ g.hoverS }}"><span style="{{ g.dotStyle }}"></span>
+          <div draggable="{{ true }}" onDragStart="{{ g.onDragStart }}" onDragEnd="{{ g.onDragEnd }}" onClick="{{ g.on }}" style="{{ g.style }}" style-hover="{{ g.hoverS }}">
             <span style="flex:1;min-width:0">{{ g.name }}</span>
             <span style="{{ g.qtyStyle }}">{{ g.qtyTxt }}</span>
             <span style="display:flex;gap:3px;flex:none">
@@ -540,7 +540,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
             <button onClick="{{ f.onDel }}" title="Remove friend" style="flex:none;width:18px;height:18px;border:none;border-radius:5px;background:none;cursor:pointer;font-size:11px;line-height:1;color:var(--mut);padding:0" style-hover="background:var(--line2)">×</button>
           </div>
           <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
-            <sc-for list="{{ f.gifts }}" as="g"><span draggable="{{ true }}" onDragStart="{{ g.onDragStart }}" onDragEnd="{{ g.onDragEnd }}" style="display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--head);font-size:12.5px;font-weight:500;cursor:grab;user-select:none" style-hover="border-color:var(--accent)"><span style="{{ g.dotStyle }}"></span><span style="flex:1;min-width:0">{{ g.name }}</span><button onClick="{{ g.onRemove }}" title="Take back" style="flex:none;width:16px;height:16px;border:none;border-radius:5px;background:none;cursor:pointer;font-size:10.5px;line-height:1;color:var(--mut);padding:0" style-hover="background:var(--line2)">×</button></span></sc-for>
+            <sc-for list="{{ f.gifts }}" as="g"><span draggable="{{ true }}" onDragStart="{{ g.onDragStart }}" onDragEnd="{{ g.onDragEnd }}" style="display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--head);font-size:12.5px;font-weight:500;cursor:grab;user-select:none" style-hover="border-color:var(--accent)"><span style="flex:1;min-width:0">{{ g.name }}</span><button onClick="{{ g.onRemove }}" title="Take back" style="flex:none;width:16px;height:16px;border:none;border-radius:5px;background:none;cursor:pointer;font-size:10.5px;line-height:1;color:var(--mut);padding:0" style-hover="background:var(--line2)">×</button></span></sc-for>
           </div>
           <div style="margin-top:8px;font-size:11.5px;color:var(--mut)">{{ f.hint }}</div>
         </div>
@@ -879,21 +879,21 @@ class Component extends DCLogic {
   componentDidUpdate(){this.applyAccent();}
   applyAccent(){const el=this.rootRef.current;if(!el)return;const a=this.props.accent;if(a&&a!=='#d9480f')el.style.setProperty('--accent',a);else el.style.removeProperty('--accent');}
 
-  updCost(r,c,v){const costs=this.state.costs.map(x=>x.slice());costs[r][c]=v===''?0:(+v||0);this.setSave({costs});}
-  updNum(key,i,v){const a=this.state[key].slice();a[i]=v===''?0:(+v||0);this.setSave({[key]:a});}
-  updName(key,i,v){const a=this.state[key].slice();a[i]=v;this.setSave({[key]:a});}
+  updCost(r,c,v){const costs=this.state.costs.map(x=>x.slice());costs[r][c]=v===''?0:(+v||0);this.setState({costs});}
+  updNum(key,i,v){const a=this.state[key].slice();a[i]=v===''?0:(+v||0);this.setState({[key]:a});}
+  updName(key,i,v){const a=this.state[key].slice();a[i]=v;this.setState({[key]:a});}
   addDummy(){const s=this.state;const ts=s.supply.reduce((a,b)=>a+(+b||0),0),td=s.demand.reduce((a,b)=>a+(+b||0),0);if(ts===td)return;
-    if(ts>td)this.setSave({demand:[...s.demand,ts-td],dst:[...s.dst,'Dummy'],costs:s.costs.map(r=>[...r,0])});
-    else this.setSave({supply:[...s.supply,td-ts],src:[...s.src,'Dummy'],costs:[...s.costs,s.demand.map(()=>0)]});}
-  addSource(){const s=this.state;this.setSave({src:[...s.src,'Source '+(s.src.length+1)],supply:[...s.supply,0],costs:[...s.costs,s.dst.map(()=>0)]});}
-  addDest(){const s=this.state;this.setSave({dst:[...s.dst,'Dest '+(s.dst.length+1)],demand:[...s.demand,0],costs:s.costs.map(r=>[...r,0])});}
-  delSource(i){const s=this.state;if(s.src.length<=2)return;this.setSave({src:s.src.filter((_,j)=>j!==i),supply:s.supply.filter((_,j)=>j!==i),costs:s.costs.filter((_,j)=>j!==i)});}
-  delDest(i){const s=this.state;if(s.dst.length<=2)return;this.setSave({dst:s.dst.filter((_,j)=>j!==i),demand:s.demand.filter((_,j)=>j!==i),costs:s.costs.map(r=>r.filter((_,j)=>j!==i))});}
+    if(ts>td)this.setState({demand:[...s.demand,ts-td],dst:[...s.dst,'Dummy'],costs:s.costs.map(r=>[...r,0])});
+    else this.setState({supply:[...s.supply,td-ts],src:[...s.src,'Dummy'],costs:[...s.costs,s.demand.map(()=>0)]});}
+  addSource(){const s=this.state;this.setState({src:[...s.src,'Source '+(s.src.length+1)],supply:[...s.supply,0],costs:[...s.costs,s.dst.map(()=>0)]});}
+  addDest(){const s=this.state;this.setState({dst:[...s.dst,'Dest '+(s.dst.length+1)],demand:[...s.demand,0],costs:s.costs.map(r=>[...r,0])});}
+  delSource(i){const s=this.state;if(s.src.length<=2)return;this.setState({src:s.src.filter((_,j)=>j!==i),supply:s.supply.filter((_,j)=>j!==i),costs:s.costs.filter((_,j)=>j!==i)});}
+  delDest(i){const s=this.state;if(s.dst.length<=2)return;this.setState({dst:s.dst.filter((_,j)=>j!==i),demand:s.demand.filter((_,j)=>j!==i),costs:s.costs.map(r=>r.filter((_,j)=>j!==i))});}
   loadExample(){const E=this.EX;this.setState({src:[...E.src],dst:[...E.dst],costs:E.costs.map(r=>r.slice()),supply:[...E.supply],demand:[...E.demand],title:'Denver network',pasteOpen:false});}
   applyPaste(){const rows=this.state.pasteTxt.trim().split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>l.split(/[\t;,]+|\s{2,}/).map(x=>+x||0));if(!rows.length||rows[0].length<2)return;
     const nC=Math.max(...rows.map(r=>r.length));const costs=rows.map(r=>{const q=r.slice(0,nC);while(q.length<nC)q.push(0);return q;});
     const pad=(arr,n,f)=>{const a=arr.slice(0,n);let i=a.length;while(a.length<n)a.push(f(i++));return a;};
-    this.setSave({costs,src:pad(this.state.src,rows.length,i=>'Source '+(i+1)),dst:pad(this.state.dst,nC,i=>'Dest '+(i+1)),supply:pad(this.state.supply,rows.length,()=>100),demand:pad(this.state.demand,nC,()=>100),pasteOpen:false,pasteTxt:''});}
+    this.setState({costs,src:pad(this.state.src,rows.length,i=>'Source '+(i+1)),dst:pad(this.state.dst,nC,i=>'Dest '+(i+1)),supply:pad(this.state.supply,rows.length,()=>100),demand:pad(this.state.demand,nC,()=>100),pasteOpen:false,pasteTxt:''});}
 
   MODELS={transportation:{name:'Transportation',fam:'t',title:'Denver network'},transshipment:{name:'Transshipment',fam:'t',title:'Depot routing'},assignment:{name:'Assignment',fam:'a',title:'Crew rota'},knapsack:{name:'Knapsack',fam:'l',title:'Trail pack'},setcovering:{name:'Set covering',fam:'l',title:'Clinic sites'},binpacking:{name:'Bin packing',fam:'l',title:'Pallet loading'},jobseq:{name:'Job sequencing',fam:'l',title:'Print queue'},shortestpath:{name:'Shortest path',fam:'g',title:'Campus shuttle'},maxflow:{name:'Maximum flow',fam:'g',title:'Pipeline capacity'},mincostflow:{name:'Minimum cost flow',fam:'g',title:'Freight network'},tsp:{name:'Travelling salesman',fam:'g',title:'Sales loop'},vrp:{name:'Vehicle routing',fam:'g',title:'Delivery fleet'},stable:{name:'Stable matching',fam:'p',title:'Residency match'},bipartite:{name:'Bipartite matching',fam:'p',title:'Shift cover'},gifts:{name:'Gift assignment',fam:'gf',title:'My gift list'}};
   async openModel(id,fresh){await this.loadData();const M=this.MODELS[id];const p={screen:'editor',model:id,title:M.title,pasteOpen:false,mode:'matrix'};
@@ -903,11 +903,10 @@ class Component extends DCLogic {
     if(M.fam==='g')p.graph=this.graphSample(id);
     if(M.fam==='p')p.pref=this.prefSample(id);
     if(M.fam==='gf'){const sv=fresh?null:this.giftLoad();if(sv){p.gift={gifts:sv.gifts,friends:sv.friends||[],given:sv.given||[],sel:null,drag:null,over:null,newG:'',newQ:1};if(sv.title)p.title=sv.title;}else p.gift=this.giftSample();if(fresh)this.giftSave(p.gift,p.title);else{this._giftDirty=false;this.supaLoad();}}
-    else{this._dirty=this._dirty||{};if(fresh){this._dirty[id]=true;this.setState(p);this.saveCur(p);return;}const sv2=this.loadLocalModel(id);if(sv2)this.applyRec(id,M.fam,sv2,p);this._dirty[id]=false;this.supaLoadModel(id,M.fam);}
     this.setState(p);}
-  mutAsg(f){const a=this.state.asg;const n={rows:[...a.rows],cols:[...a.cols],costs:a.costs.map(r=>r.slice())};f(n);this.setState({asg:n});this.saveCur({asg:n});}
-  mutList(f){const l=this.state.list;const n={...l,items:l.items.map(it=>it.slice())};f(n);this.setState({list:n});this.saveCur({list:n});}
-  mutGraph(f){const g=this.state.graph;const n={...g,nodes:g.nodes.map(x=>({...x})),edges:g.edges.map(x=>({...x}))};f(n);this.setState({graph:n});this.saveCur({graph:n});}
+  mutAsg(f){const a=this.state.asg;const n={rows:[...a.rows],cols:[...a.cols],costs:a.costs.map(r=>r.slice())};f(n);this.setState({asg:n});}
+  mutList(f){const l=this.state.list;const n={...l,items:l.items.map(it=>it.slice())};f(n);this.setState({list:n});}
+  mutGraph(f){const g=this.state.graph;const n={...g,nodes:g.nodes.map(x=>({...x})),edges:g.edges.map(x=>({...x}))};f(n);this.setState({graph:n});}
   normGift(g){if(!g)return null;if(Array.isArray(g.given))return g;
     const gifts=[],given=[];(g.gifts||[]).forEach(x=>{gifts.push({n:x.n,q:Math.max(1,+x.q||1)});if(x.to!=null)given.push({g:gifts.length-1,to:x.to});});
     return{...g,gifts,given,newQ:1,drag:null,over:null};}
@@ -917,22 +916,8 @@ class Component extends DCLogic {
   async supaLoad(){try{const r=await fetch(this.SUPA_URL+'/rest/v1/gift_boards?id=eq.default&select=data',{headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY}});const rows=await r.json();const d=rows&&rows[0]&&rows[0].data;
     if(d&&Array.isArray(d.gifts)&&!this._giftDirty){this.setState({gift:{gifts:d.gifts,friends:d.friends||[],given:d.given||[],sel:null,drag:null,over:null,newG:'',newQ:1},title:d.title||this.state.title});try{localStorage.setItem('argmin-gift-v1',JSON.stringify(d));}catch(e){}}}catch(e){}}
   giftLoad(){try{const d=JSON.parse(localStorage.getItem('argmin-gift-v1')||'null');return d&&Array.isArray(d.gifts)?d:null;}catch(e){return null;}}
-  setSave(p){this.setState(p);this.saveCur(p);}
-  saveCur(over){const s={...this.state,...(over||{})};const id=s.model,fam=this.MODELS[id].fam;let data=null;
-    if(fam==='t')data={src:s.src,dst:s.dst,costs:s.costs,supply:s.supply,demand:s.demand};
-    else if(fam==='a')data=s.asg;else if(fam==='l')data=s.list;else if(fam==='g')data=s.graph;else if(fam==='p')data=s.pref;
-    if(!data)return;this._dirty=this._dirty||{};this._dirty[id]=true;const rec={data,title:s.title};
-    try{localStorage.setItem('argmin-'+id,JSON.stringify(rec));}catch(e){}
-    this._bt=this._bt||{};clearTimeout(this._bt[id]);this._bt[id]=setTimeout(()=>{fetch(this.SUPA_URL+'/rest/v1/gift_boards',{method:'POST',headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id,data:rec,updated_at:new Date().toISOString()})}).catch(()=>{});},600);}
-  loadLocalModel(id){try{const d=JSON.parse(localStorage.getItem('argmin-'+id)||'null');return d&&d.data?d:null;}catch(e){return null;}}
-  applyRec(id,fam,rec,p){const d=rec.data;if(!d)return;if(rec.title)p.title=rec.title;
-    if(fam==='t'&&d.src)Object.assign(p,{src:d.src,dst:d.dst,costs:d.costs,supply:d.supply,demand:d.demand});
-    if(fam==='a')p.asg=d;if(fam==='l')p.list=d;if(fam==='g')p.graph=d;if(fam==='p')p.pref=d;}
-  async supaLoadModel(id,fam){try{const r=await fetch(this.SUPA_URL+'/rest/v1/gift_boards?id=eq.'+id+'&select=data',{headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY}});const rows=await r.json();const rec=rows&&rows[0]&&rows[0].data;
-    if(!rec||(this._dirty&&this._dirty[id])||this.state.model!==id)return;const p={};this.applyRec(id,fam,rec,p);this.setState(p);
-    try{localStorage.setItem('argmin-'+id,JSON.stringify(rec));}catch(e){}}catch(e){}}
   mutGift(f){const g=this.normGift(this.state.gift);const n={...g,gifts:(g.gifts||[]).map(x=>({...x})),given:(g.given||[]).map(x=>({...x})),friends:[...(g.friends||[])]};f(n);this.setState({gift:n});this.giftSave(n,this.state.title);}
-  mutPref(f){const q=this.state.pref;const n={...q,left:q.left.map(x=>({n:x.n,p:[...x.p]})),right:q.right.map(x=>({n:x.n,p:[...x.p]}))};f(n);this.setState({pref:n});this.saveCur({pref:n});}
+  mutPref(f){const q=this.state.pref;const n={...q,left:q.left.map(x=>({n:x.n,p:[...x.p]})),right:q.right.map(x=>({n:x.n,p:[...x.p]}))};f(n);this.setState({pref:n});}
   renderVals(){
     const st=this.state,P=this.props,h=React.createElement;
     const theme=st.themeO??(P.theme??'light');
@@ -1111,23 +1096,21 @@ class Component extends DCLogic {
       const left=Math.max(1,+n.gifts[gi].q||1)-n.given.filter(x=>x.g===gi).length;
       if(left>0)n.given.push({g:gi,to:fi});
       n.sel=null;n.drag=null;n.over=null;});};
-    const gfCol=i=>['#e8590c','#0f766e','#4263eb','#c2255c','#9c36b5','#2f9e44'][i%6];
     const gfPool=GFg.map((g,i)=>({g,i})).filter(x=>gfLeftOf(x.i)>0).map(x=>{
-      const q=gfQ(x.i),left=gfLeftOf(x.i),act=gfSel===x.i||gfDrag===x.i,col=gfCol(x.i);
+      const q=gfQ(x.i),left=gfLeftOf(x.i),act=gfSel===x.i||gfDrag===x.i;
       return{name:x.g.n,
-        dotStyle:'flex:none;width:9px;height:9px;border-radius:50%;background:'+(act?'rgba(255,255,255,0.85)':col),
         qtyTxt:q>1?left+' of '+q:'',
-        qtyStyle:q>1?("flex:none;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:999px;"+(act?'background:rgba(255,255,255,0.22);color:#fff':'background:color-mix(in oklab, '+col+' 14%, var(--surface));color:'+col)):'display:none',
+        qtyStyle:q>1?("flex:none;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:999px;"+(act?'background:rgba(255,255,255,0.22);color:#fff':'background:color-mix(in oklab, var(--accent) 12%, var(--surface));color:var(--accent)')):'display:none',
         stepStyle:'width:20px;height:20px;border-radius:6px;cursor:pointer;font-size:12px;line-height:1;padding:0;border:1px solid '+(act?'rgba(255,255,255,0.4);background:transparent;color:#fff':'var(--line);background:var(--surface);color:var(--mut)'),
-        style:'display:flex;align-items:center;gap:8px;text-align:left;padding:8px 8px 8px 12px;border-radius:9px;cursor:grab;font-size:13px;font-weight:500;user-select:none;border:1px solid '+(act?col+';background:'+col+';color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.18)':'var(--line);background:var(--surface);color:var(--ink)'),
+        style:'display:flex;align-items:center;gap:8px;text-align:left;padding:8px 8px 8px 12px;border-radius:9px;cursor:grab;font-size:13px;font-weight:500;user-select:none;border:1px solid '+(act?'var(--accent);background:var(--accent);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.18)':'var(--line);background:var(--surface);color:var(--ink)'),
         on:()=>this.mutGift(n=>{n.sel=n.sel===x.i?null:x.i;}),
         onDragStart:e=>{if(e.dataTransfer){e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',String(x.i));}catch(err){}}this.mutGift(n=>{n.drag=x.i;n.sel=x.i;});},
         onDragEnd:()=>this.mutGift(n=>{n.drag=null;n.over=null;}),
         onInc:e=>{e.stopPropagation();this.mutGift(n=>{n.gifts[x.i].q=Math.max(1,+n.gifts[x.i].q||1)+1;});},
         onDec:e=>{e.stopPropagation();this.mutGift(n=>{const used=n.given.filter(y=>y.g===x.i).length;n.gifts[x.i].q=Math.max(1,used,Math.max(1,+n.gifts[x.i].q||1)-1);});},
         onDelete:e=>{e.stopPropagation();this.mutGift(n=>{n.gifts.splice(x.i,1);n.given=n.given.filter(y=>y.g!==x.i).map(y=>y.g>x.i?{...y,g:y.g-1}:y);n.sel=n.sel===x.i?null:(n.sel!=null&&n.sel>x.i?n.sel-1:n.sel);n.drag=n.drag===x.i?null:(n.drag!=null&&n.drag>x.i?n.drag-1:n.drag);});},
-        hoverS:act?'':'border-color:'+col+';box-shadow:0 1px 4px color-mix(in oklab, '+col+' 25%, transparent)',
-        stepHover:act?'background:rgba(255,255,255,0.18)':'border-color:'+col+';color:'+col,
+        hoverS:act?'':'border-color:var(--accent);box-shadow:0 1px 4px color-mix(in oklab, var(--accent) 25%, transparent)',
+        stepHover:act?'background:rgba(255,255,255,0.18)':'border-color:var(--accent);color:var(--accent)',
         delStyle:'flex:none;width:20px;height:20px;border:none;border-radius:6px;background:none;cursor:pointer;font-size:12.5px;line-height:1;padding:0;color:'+(act?'rgba(255,255,255,0.75)':'var(--mut)'),
         delHover:act?'background:rgba(255,255,255,0.18);color:#fff':'background:color-mix(in oklab, var(--rose) 12%, var(--surface));color:var(--rose)'};});
     const gfTotal=GFg.reduce((a,_,i)=>a+gfQ(i),0),gfDone=GFv.length,gfLeftN=gfTotal-gfDone;
@@ -1147,7 +1130,7 @@ class Component extends DCLogic {
         style:'background:'+(isOver?'color-mix(in oklab, var(--accent) 7%, var(--surface))':'var(--surface)')+';border-radius:12px;padding:14px 14px 12px;box-shadow:inset 0 0 0 '+(isOver?'2px var(--accent)':(gfArmed?'1.5px color-mix(in oklab, var(--accent) 50%, var(--line))':'1px var(--line)'))+';cursor:'+(gfSel!=null?'pointer':'default'),
         hoverS:gfSel!=null?'box-shadow:inset 0 0 0 2px var(--accent);background:color-mix(in oklab, var(--accent) 6%, var(--surface))':'',
         hint:mine.length?'':(isOver?'Drop to give':(gfArmed?'Drop or click to give':'Drag a gift here')),
-        gifts:mine.map(o=>({name:GFg[o.x.g]?GFg[o.x.g].n:'?',dotStyle:'flex:none;width:8px;height:8px;border-radius:50%;background:'+gfCol(o.x.g),
+        gifts:mine.map(o=>({name:GFg[o.x.g]?GFg[o.x.g].n:'?',
           onDragStart:e=>{if(e.dataTransfer){e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain','v:'+o.vi);}catch(err){}}this.mutGift(n=>{n.dragV=o.vi;});},
           onDragEnd:()=>this.mutGift(n=>{n.dragV=null;n.over=null;}),
           onRemove:e=>{e.stopPropagation();this.mutGift(n=>{n.given.splice(o.vi,1);});}}))};});
@@ -1163,7 +1146,7 @@ class Component extends DCLogic {
       isHome:scr==='home',isEdT:scr==='editor'&&fam==='t',isEdA:scr==='editor'&&fam==='a',isEdL:scr==='editor'&&fam==='l',isEdG:scr==='editor'&&fam==='g',isEdP:scr==='editor'&&fam==='p',isEdGift:scr==='editor'&&fam==='gf',isResults:scr==='results'&&!famG,isResultsG:scr==='results'&&famG,isSaved:scr==='saved',
       wizOpen:st.wizOpen,onWizToggle:()=>this.setState({wizOpen:!st.wizOpen}),wizBtn:st.wizOpen?'Close':'Help me choose',
       wizChips,hasRec:!!st.wiz,recT:st.wiz?recs[st.wiz].t:'',recW:st.wiz?recs[st.wiz].w:'',
-      title:st.title,onTitle:e=>{const t=e.target.value;this.setState({title:t});if(fam==='gf'&&st.gift)this.giftSave(this.normGift(st.gift),t);else if(scr==='editor')this.saveCur({title:t});},
+      title:st.title,onTitle:e=>{const t=e.target.value;this.setState({title:t});if(fam==='gf'&&st.gift)this.giftSave(this.normGift(st.gift),t);},
       onLoadExample:()=>this.openModel(st.model,true),
       pasteBtnS:'padding:8px 13px;border:1px solid '+(st.pasteOpen?'var(--mut)':'var(--line)')+';border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500',
       onPasteToggle:()=>this.setState({pasteOpen:!st.pasteOpen}),pasteOpen:st.pasteOpen,pasteTxt:st.pasteTxt,
