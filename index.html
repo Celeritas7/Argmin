@@ -505,13 +505,14 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 
   <sc-if value="{{ gfIsFolders }}" hint-placeholder-val="{{ true }}">
   <div style="margin-top:16px">
-    <div style="font-size:12px;color:var(--mut);margin-bottom:14px">One folder per occasion — open one to plan its gifts.</div>
+    <div style="font-size:12px;color:var(--mut);margin-bottom:14px">One folder per occasion — click a card to open it, ✎ to rename, × to delete.</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;align-items:start">
       <sc-for list="{{ gfFolders }}" as="o" hint-placeholder-count="3">
         <div onClick="{{ o.on }}" style="{{ o.cardS }}" style-hover="{{ o.cardHover }}">
           <div style="display:flex;align-items:center;gap:6px">
-            <input value="{{ o.name }}" onChange="{{ o.onName }}" onClick="{{ o.stop }}" style="flex:1;min-width:0;background:none;border:none;outline:none;padding:2px 4px;margin:-2px -4px;font-family:inherit;font-size:15px;font-weight:600;letter-spacing:-0.01em;color:var(--ink)" style-focus="background:var(--head);border-radius:6px" />
-            <button onClick="{{ o.onDel }}" title="Delete occasion" style="{{ o.delS }}" style-hover="background:var(--line2);color:var(--rose)">×</button>
+            <input value="{{ o.name }}" onChange="{{ o.onName }}" onClick="{{ o.stop }}" title="Click to rename" style="flex:1;min-width:0;background:none;border:1px solid transparent;outline:none;padding:3px 6px;margin:-3px -6px;font-family:inherit;font-size:15px;font-weight:600;letter-spacing:-0.01em;color:var(--ink);cursor:text;border-radius:7px" style-hover="border-color:var(--line);background:var(--head)" style-focus="border-color:var(--accent);background:var(--surface)" />
+            <button onClick="{{ o.onRename }}" title="Rename occasion" style="flex:none;width:26px;height:26px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:pointer;font-size:12px;line-height:1;color:var(--mut);padding:0" style-hover="border-color:var(--accent);color:var(--accent)">✎</button>
+            <button onClick="{{ o.onDel }}" title="Delete occasion" style="{{ o.delS }}" style-hover="border-color:var(--rose);background:color-mix(in oklab, var(--rose) 10%, var(--surface));color:var(--rose)">×</button>
           </div>
           <div style="font-size:12.5px;color:var(--mut)">{{ o.meta }}</div>
           <div style="{{ o.barS }}"><div style="{{ o.barFillS }}"></div></div>
@@ -1175,12 +1176,13 @@ class Component extends DCLogic {
         cardHover:'border-color:color-mix(in oklab, '+gfCol0(i)+' 45%, var(--line));border-top-color:'+gfCol0(i)+';box-shadow:0 3px 14px color-mix(in oklab, '+gfCol0(i)+' 14%, transparent)',
         onName:e=>{const v=e.target.value;this.mutGift(n=>{n.occs[i]={...n.occs[i],name:v};});},
         stop:e=>e.stopPropagation(),
+        onRename:e=>{e.stopPropagation();const inp=e.currentTarget.parentNode.querySelector('input');if(inp){inp.focus();inp.select();}},
         meta:tot?(fmt(tot)+' gift'+(tot===1?'':'s')+' · '+fmt(fr)+' friend'+(fr===1?'':'s')):'Empty — add gifts',
         barS:'height:4px;border-radius:999px;background:var(--head);overflow:hidden;display:'+(tot?'block':'none'),
         barFillS:'height:100%;border-radius:999px;width:'+pct+'%;background:'+(tot&&done===tot?'var(--ok)':gfCol0(i)),
         stat:tot?(done===tot?'All assigned':fmt(done)+' of '+fmt(tot)+' assigned'):'Nothing assigned yet',
         statS:'font-family:\'IBM Plex Mono\',monospace;font-size:10.5px;letter-spacing:0.04em;color:'+(tot&&done===tot?'var(--ok)':'var(--mut)'),
-        delS:'flex:none;width:22px;height:22px;border:none;border-radius:6px;background:none;cursor:pointer;font-size:13px;line-height:1;color:var(--mut);padding:0;display:'+(many?'block':'none'),
+        delS:'flex:none;width:26px;height:26px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:pointer;font-size:14px;line-height:1;color:var(--mut);padding:0;display:'+(many?'block':'none'),
         onDel:e=>{e.stopPropagation();this.gfDelOcc(i);}};});
     const GFg=GF.gifts||[],GFv=GF.given||[];
     const gfSel=GF.sel,gfDrag=GF.drag,gfArmed=gfSel!=null||gfDrag!=null;
