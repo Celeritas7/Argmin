@@ -956,8 +956,8 @@ class Component extends DCLogic {
   giftSave(g,title){this._giftDirty=true;const q=this.normGift(g);const data={occs:q.occs,oi:q.oi,title:title||this.state.title};
     try{localStorage.setItem('argmin-gift-v1',JSON.stringify(data));}catch(e){}
     if(!this._giftSynced){this._giftPend=true;return;}
-    clearTimeout(this._supaT);this._supaT=setTimeout(()=>{fetch(this.SUPA_URL+'/rest/v1/gift_boards',{method:'POST',headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id:'default',data,updated_at:new Date().toISOString()})}).catch(()=>{});},600);}
-  async supaLoad(){let d=null;try{const r=await fetch(this.SUPA_URL+'/rest/v1/gift_boards?id=eq.default&select=data',{headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY}});const rows=await r.json();d=rows&&rows[0]&&rows[0].data;}catch(e){}
+    clearTimeout(this._supaT);this._supaT=setTimeout(()=>{fetch(this.SUPA_URL+'/rest/v1/argmin_boards',{method:'POST',headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id:'gifts',model:'gifts',family:'gf',data,updated_at:new Date().toISOString()})}).then(r=>{if(!r.ok)console.warn('argmin sync failed',r.status)}).catch(e=>console.warn('argmin sync failed',e));},600);}
+  async supaLoad(){let d=null;try{const r=await fetch(this.SUPA_URL+'/rest/v1/argmin_boards?id=eq.gifts&select=data',{headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY}});const rows=await r.json();d=rows&&rows[0]&&rows[0].data;}catch(e){}
     this._giftSynced=true;
     if(d&&(Array.isArray(d.occs)||Array.isArray(d.gifts))&&!this._giftDirty){this.setState({gift:this.normGift({...d,sel:null,drag:null,over:null,newG:'',newQ:1}),title:d.title||this.state.title});try{localStorage.setItem('argmin-gift-v1',JSON.stringify(d));}catch(e){}}
     else if(this._giftPend){this._giftPend=false;this.giftSave(this.state.gift);}}
@@ -968,12 +968,12 @@ class Component extends DCLogic {
     else if(fam==='a')data=s.asg;else if(fam==='l')data=s.list;else if(fam==='g')data=s.graph;else if(fam==='p')data=s.pref;
     if(!data)return;this._dirty=this._dirty||{};this._dirty[id]=true;const rec={data,title:s.title};
     try{localStorage.setItem('argmin-'+id,JSON.stringify(rec));}catch(e){}
-    this._bt=this._bt||{};clearTimeout(this._bt[id]);this._bt[id]=setTimeout(()=>{fetch(this.SUPA_URL+'/rest/v1/gift_boards',{method:'POST',headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id,data:rec,updated_at:new Date().toISOString()})}).catch(()=>{});},600);}
+    this._bt=this._bt||{};clearTimeout(this._bt[id]);this._bt[id]=setTimeout(()=>{fetch(this.SUPA_URL+'/rest/v1/argmin_boards',{method:'POST',headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id,model:id,family:fam,data:rec,updated_at:new Date().toISOString()})}).then(r=>{if(!r.ok)console.warn('argmin sync failed',r.status)}).catch(e=>console.warn('argmin sync failed',e));},600);}
   loadLocalModel(id){try{const d=JSON.parse(localStorage.getItem('argmin-'+id)||'null');return d&&d.data?d:null;}catch(e){return null;}}
   applyRec(id,fam,rec,p){const d=rec.data;if(!d)return;if(rec.title)p.title=rec.title;
     if(fam==='t'&&d.src)Object.assign(p,{src:d.src,dst:d.dst,costs:d.costs,supply:d.supply,demand:d.demand});
     if(fam==='a')p.asg=d;if(fam==='l')p.list=d;if(fam==='g')p.graph=d;if(fam==='p')p.pref=d;}
-  async supaLoadModel(id,fam){try{const r=await fetch(this.SUPA_URL+'/rest/v1/gift_boards?id=eq.'+id+'&select=data',{headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY}});const rows=await r.json();const rec=rows&&rows[0]&&rows[0].data;
+  async supaLoadModel(id,fam){try{const r=await fetch(this.SUPA_URL+'/rest/v1/argmin_boards?id=eq.'+id+'&select=data',{headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY}});const rows=await r.json();const rec=rows&&rows[0]&&rows[0].data;
     if(!rec||(this._dirty&&this._dirty[id])||this.state.model!==id)return;const p={};this.applyRec(id,fam,rec,p);this.setState(p);
     try{localStorage.setItem('argmin-'+id,JSON.stringify(rec));}catch(e){}}catch(e){}}
   mutGift(f){const g=this.normGift(this.state.gift);
