@@ -40,7 +40,7 @@ const KIT = {
 // Glyph: fetches an assets/glyphs SVG and inlines it so currentColor tints apply
 function Glyph({name,w=50,h=34}){
   const [svg,setSvg]=React.useState(null);
-  React.useEffect(()=>{let on=true;fetch('../../assets/glyphs/'+name+'.svg').then(r=>r.text()).then(t=>{if(on)setSvg(t.replace('width="38" height="26"',`width="${w}" height="${h}"`));});return()=>{on=false;};},[name]);
+  React.useEffect(()=>{let on=true;fetch('./assets/glyphs/'+name+'.svg').then(r=>r.ok?r.text():'').then(t=>{if(on&&t.trim().startsWith('<svg'))setSvg(t.replace('width="38" height="26"',`width="${w}" height="${h}"`));});return()=>{on=false;};},[name]);
   return <span style={{display:'inline-flex'}} dangerouslySetInnerHTML={{__html:svg||`<svg width="${w}" height="${h}"></svg>`}}/>;
 }
 Object.assign(window,{KIT,Glyph});

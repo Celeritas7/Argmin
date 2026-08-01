@@ -25,7 +25,7 @@ function HomeScreen({onOpen}){
         <h1 style={{margin:0,fontSize:27,fontWeight:600,letterSpacing:'-0.015em'}}>What are you optimising?</h1>
         <p style={{margin:'8px 0 0',fontSize:14,lineHeight:1.5,color:'var(--mut)',maxWidth:580,textWrap:'pretty'}}>Pick a model below. Argmin solves it and shows every step of the working — not just the answer.</p>
       </div>
-      <img src="../../assets/hero-network.svg" width="300" height="128" alt="" style={{flex:'none'}}/>
+      <img src="./assets/hero-network.svg" width="300" height="128" alt="" style={{flex:'none'}}/>
     </div>
     <div style={{margin:'24px 0 28px',border:'1px dashed var(--line)',borderRadius:12,background:'var(--surface)',padding:'14px 18px'}}>
       <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap'}}>
