@@ -1,0 +1,77 @@
+/* tokens/fonts.css */
+/* Webfonts — the source app loads IBM Plex from Google Fonts (no local binaries in the codebase) */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+/* tokens/colors.css */
+/* Argmin color system — source: Argmin/index.html [data-argmin] scope */
+:root{
+/* light theme (default) */
+--bg:#eef0f4;--surface:#ffffff;--head:#f4f6f9;--ink:#1b2129;--mut:#6a7482;--line:#d8dde4;--line2:#e7eaef;
+--accent:#d9480f;
+--blue:#3b5bdb;--teal:#0c8599;--rose:#d6336c;--purple:#6741d9;
+--ok:#2b8a3e;--warn:#b7791f;
+/* gift-board categorical palette (index rotation) */
+--cat-1:#e8590c;--cat-2:#0f766e;--cat-3:#4263eb;--cat-4:#c2255c;--cat-5:#9c36b5;--cat-6:#2f9e44;
+/* semantic aliases */
+--surface-page:var(--bg);--surface-card:var(--surface);--surface-inset:var(--head);
+--text-body:var(--ink);--text-muted:var(--mut);--text-on-accent:#ffffff;
+--border-strong:var(--line);--border-soft:var(--line2);
+--brand-mark-bg:#1b2129;--brand-mark-fg:#ff7a45;
+}
+[data-theme="dark"]{
+--bg:#131519;--surface:#1c2027;--head:#22262e;--ink:#e8eaee;--mut:#96a0ac;--line:#2d323b;--line2:#262b33;
+--accent:#ff7a45;
+--blue:#748ffc;--teal:#3bc9db;--rose:#f06595;--purple:#9775fa;
+--ok:#51cf66;--warn:#fab005;
+}
+
+/* tokens/typography.css */
+/* Argmin type system — IBM Plex Sans (UI) + IBM Plex Mono (numbers, labels, badges) */
+:root{
+--font-sans:'IBM Plex Sans',sans-serif;
+--font-mono:'IBM Plex Mono',monospace;
+/* scale (exact values from source) */
+--fs-h1:27px;          /* page title, 600, ls -0.015em */
+--fs-title:21px;       /* screen title, 600, ls -0.01em */
+--fs-h2:16px;          /* card heading, 600 */
+--fs-h3:15px;          /* panel heading, 600 */
+--fs-body:14px;        /* intro copy, lh 1.5 */
+--fs-ui:13.5px;        /* row titles, tabs, 500 */
+--fs-control:12.5px;   /* buttons, meta, 500-600 */
+--fs-caption:12px;     /* row descriptions, lh 1.35 */
+--fs-hint:11.5px;      /* footnotes, legends */
+--fs-badge:11px;       /* mono badges */
+--fs-overline:10.5px;  /* mono section labels, ls 0.06em, UPPERCASE */
+--fs-tag:9.5px;        /* NP-HARD tag, mono, ls 0.04em */
+--fs-metric:42px;      /* objective value, mono 600, ls -0.02em */
+--lh-body:1.5; /* @kind other */
+--lh-tight:1.35; /* @kind other */
+}
+
+/* tokens/shape.css */
+/* Argmin radii, borders, shadows — exact values from source */
+:root{
+--r-card-lg:14px;   /* category cards */
+--r-card:12px;      /* panels, folders */
+--r-tile:10px;      /* glyph tiles, matrix frame, timeline steps, dashed add */
+--r-row:9px;        /* hoverable model rows */
+--r-btn:8px;        /* buttons, inputs */
+--r-select:7px;     /* small selects, step nav */
+--r-badge:6px;      /* status badges */
+--r-tag:5px;        /* count chips, mono tags */
+--r-tag-sm:4px;     /* NP-HARD tag */
+--r-pill:999px;     /* chips, theme toggle, occasion pills */
+--shadow-card:0 1px 3px rgba(0,0,0,0.05);
+--shadow-btn:0 1px 3px rgba(0,0,0,0.15);
+--shadow-drag:0 1px 3px rgba(0,0,0,0.18);
+--nav-h:54px;
+}
+
+/* tokens/base.css */
+/* Global resets — verbatim from source app */
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+a:hover{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+

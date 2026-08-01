@@ -7,3 +7,5 @@ supabase/.temp/
 supabase/.branches/
 .netlify/
 Temp/
+archive/
+docs/screenshots/

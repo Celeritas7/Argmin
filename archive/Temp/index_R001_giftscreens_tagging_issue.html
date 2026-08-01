@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>argmin</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231b2129'/%3E%3Crect x='23' y='23' width='18' height='18' fill='%23ff7a45' transform='rotate(45 32 32)'/%3E%3C/svg%3E">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap">
+<style>
+body{margin:0;background:#eef0f4;font-family:'IBM Plex Sans',sans-serif}
+a{color:inherit;text-decoration:none}
+a:hover{color:inherit}
+button,input,select,textarea{font:inherit;color:inherit}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+[data-argmin]{--bg:#eef0f4;--surface:#ffffff;--head:#f4f6f9;--ink:#1b2129;--mut:#6a7482;--line:#d8dde4;--line2:#e7eaef;--accent:#d9480f;--blue:#3b5bdb;--teal:#0c8599;--rose:#d6336c;--purple:#6741d9;--ok:#2b8a3e;--warn:#b7791f}
+@keyframes am-dash{to{stroke-dashoffset:-24}}
+@keyframes am-trace{to{stroke-dashoffset:-40}}
+@keyframes am-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
+@keyframes am-rise{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.6px)}}
+@keyframes am-slide{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
+[data-am-flow],[data-am-tour],[data-am-node],[data-am-bar],[data-am-item]{transform-box:fill-box;transform-origin:center}
+[data-am-row]:hover [data-am-flow]{stroke-dasharray:6 4;animation:am-dash .9s linear infinite}
+[data-am-row]:hover [data-am-tour]{stroke-dasharray:9 5;animation:am-trace 1.4s linear infinite}
+[data-am-row]:hover [data-am-node]{animation:am-pulse 1.1s ease-in-out infinite}
+[data-am-row]:hover [data-am-bar]{animation:am-slide 1.1s ease-in-out infinite}
+[data-am-row]:hover [data-am-item]{animation:am-rise 1.1s ease-in-out infinite}
+[data-am-glyph]{transition:transform .22s ease}
+[data-am-row]:hover [data-am-glyph]{transform:scale(1.06)}
+[data-argmin][data-theme="dark"]{--bg:#131519;--surface:#1c2027;--head:#22262e;--ink:#e8eaee;--mut:#96a0ac;--line:#2d323b;--line2:#262b33;--accent:#ff7a45;--blue:#748ffc;--teal:#3bc9db;--rose:#f06595;--purple:#9775fa;--ok:#51cf66;--warn:#fab005}
+</style>
+</helmet>
+<div ref="{{ rootRef }}" data-argmin="1" data-theme="{{ theme }}" style="min-height:100vh;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans',sans-serif;-webkit-font-smoothing:antialiased">
+<div style="display:flex;align-items:center;gap:16px;height:54px;padding:0 22px;border-bottom:1px solid var(--line);background:var(--surface)">
+  <a onClick="{{ goHome }}" style="display:flex;align-items:center;gap:9px;cursor:pointer">
+    <span style="width:9px;height:9px;background:var(--ink);transform:rotate(45deg);display:block"></span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;letter-spacing:-0.02em">argmin</span>
+  </a>
+  <div style="display:flex;gap:2px;margin-left:10px;align-self:stretch">
+    <button onClick="{{ goHome }}" style="position:relative;padding:0 12px;background:none;border:none;cursor:pointer;font-size:13px;font-weight:500;color:{{ navHomeC }}">Problems<span style="position:absolute;left:12px;right:12px;bottom:0;height:2px;background:{{ navHomeBar }}"></span></button>
+    <button onClick="{{ goSaved }}" style="position:relative;padding:0 12px;background:none;border:none;cursor:pointer;font-size:13px;font-weight:500;color:{{ navSavedC }}">Saved<span style="position:absolute;left:12px;right:12px;bottom:0;height:2px;background:{{ navSavedBar }}"></span></button>
+  </div>
+  <div style="flex:1"></div>
+  <button onClick="{{ onTheme }}" style="display:flex;align-items:center;gap:7px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);cursor:pointer;font-size:12px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--mut)"><span style="width:9px;height:9px;border-radius:50%;background:var(--ink);display:block"></span>{{ themeLabel }}</button>
+</div>
+
+<sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Home — problem picker" style="max-width:1080px;margin:0 auto;padding:44px 24px 72px">
+  <div style="display:flex;align-items:center;gap:32px;flex-wrap:wrap">
+    <div style="flex:1;min-width:300px">
+      <h1 style="margin:0;font-size:27px;font-weight:600;letter-spacing:-0.015em">What are you optimising?</h1>
+      <p style="margin:8px 0 0;font-size:14px;line-height:1.5;color:var(--mut);max-width:580px;text-wrap:pretty">Pick a model below. Argmin solves it and shows every step of the working — not just the answer.</p>
+    </div>
+    <svg width="300" height="128" viewBox="0 0 300 128" style="flex:none">
+      <g stroke="var(--line)" stroke-width="1.3" fill="none">
+        <path d="M28 64 L96 24 M96 24 L170 46 M96 104 L170 82 M170 46 L170 82 M96 24 L96 104 M170 46 L244 96 M170 82 L244 32"></path>
+      </g>
+      <path d="M28 64 L96 104 L170 82 L244 32 L272 64" stroke="var(--accent)" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="7 6">
+        <animate attributeName="stroke-dashoffset" from="26" to="0" dur="1.6s" repeatCount="indefinite"></animate>
+      </path>
+      <path d="M28 64 L96 24 L170 46 L244 96 L272 64" stroke="var(--line)" stroke-width="1.3" fill="none"></path>
+      <g fill="var(--surface)" stroke="var(--mut)" stroke-width="1.4">
+        <circle cx="28" cy="64" r="7"></circle><circle cx="96" cy="24" r="7"></circle><circle cx="96" cy="104" r="7"></circle><circle cx="170" cy="46" r="7"></circle><circle cx="170" cy="82" r="7"></circle><circle cx="244" cy="32" r="7"></circle><circle cx="244" cy="96" r="7"></circle>
+      </g>
+      <g fill="var(--accent)" stroke="none">
+        <circle cx="28" cy="64" r="4"></circle><circle cx="96" cy="104" r="4"></circle><circle cx="170" cy="82" r="4"></circle><circle cx="244" cy="32" r="4"></circle><circle cx="272" cy="64" r="4"></circle>
+      </g>
+      <circle cx="272" cy="64" r="7" fill="none" stroke="var(--accent)" stroke-width="1.6"></circle>
+      <text x="272" y="86" text-anchor="middle" style="font:600 10px 'IBM Plex Mono',monospace;fill:var(--accent)">min</text>
+    </svg>
+  </div>
+
+  <div style="margin:24px 0 28px;border:1px dashed var(--line);border-radius:12px;background:var(--surface);padding:14px 18px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <span style="font-size:13px;font-weight:600">Not sure which one?</span>
+      <span style="font-size:12.5px;color:var(--mut)">Answer one question and we'll point you at the right model.</span>
+      <div style="flex:1"></div>
+      <button onClick="{{ onWizToggle }}" style="padding:7px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500" style-hover="border-color:var(--mut)">{{ wizBtn }}</button>
+    </div>
+    <sc-if value="{{ wizOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:14px;font-size:12px;font-weight:600;color:var(--mut)">What are you trying to decide?</div>
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+        <sc-for list="{{ wizChips }}" as="w" hint-placeholder-count="4"><button onClick="{{ w.on }}" style="{{ w.style }}">{{ w.label }}</button></sc-for>
+      </div>
+      <sc-if value="{{ hasRec }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:14px;display:flex;align-items:flex-start;gap:14px;padding:14px 16px;border:1px solid var(--line);border-radius:10px;background:var(--head);flex-wrap:wrap">
+          <div style="flex:1;min-width:260px">
+            <div style="font-size:13.5px;font-weight:600">{{ recT }}</div>
+            <div style="margin-top:3px;font-size:12.5px;line-height:1.5;color:var(--mut);text-wrap:pretty">{{ recW }}</div>
+          </div>
+          <button onClick="{{ goEditor }}" style="padding:8px 14px;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font-size:12.5px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,0.15)" style-hover="filter:brightness(1.1)">Open the editor →</button>
+        </div>
+      </sc-if>
+    </sc-if>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px">
+
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 20px 10px;--ic:var(--blue);box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+      <div style="display:flex;align-items:baseline;gap:10px"><span style="width:8px;height:8px;border-radius:2px;background:var(--ic);align-self:center"></span><h2 style="margin:0;font-size:16px;font-weight:600">Network flow</h2><span style="flex:none;white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ic);background:color-mix(in oklab, var(--ic) 10%, var(--surface));padding:2px 7px;border-radius:5px">6 models</span></div>
+      <p style="margin:4px 0 8px;font-size:12.5px;color:var(--mut)">Move things through a network at least cost.</p>
+      <div style="display:flex;flex-direction:column">
+        <div onClick="{{ go.transportation }}" style="display:flex;align-items:center;gap:14px;padding:11px 8px;margin:0 -8px;border-radius:9px;cursor:pointer" style-hover="background:var(--head)" data-am-row="1">
+          <span data-am-glyph="1" style="flex:none;width:66px;height:48px;border-radius:10px;background:color-mix(in oklab, var(--ic) 9%, var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ic) 20%, transparent);display:flex;align-items:center;justify-content:center"><svg width="50" height="34" viewBox="0 0 38 26"><path d="M11 8 L27 5 M11 8 L27 13 M11 18 L27 13 M11 18 L27 21" stroke="var(--ic)" stroke-width="1.2" fill="none" opacity="0.32"></path><path data-am-flow="1" d="M11 8 L27 13 M11 18 L27 21" stroke="var(--ic)" stroke-width="1.8" fill="none"></path><g fill="var(--ic)"><rect x="4" y="4.5" width="7" height="7" rx="1.6"></rect><rect x="4" y="14.5" width="7" height="7" rx="1.6"></rect><circle cx="30" cy="13" r="2.6"></circle><circle cx="30" cy="21" r="2.6"></circle></g><circle cx="30" cy="5" r="2.6" fill="none" stroke="var(--ic)" stroke-width="1.4"></circle></svg></span>
+          <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500">Transportation</div><div style="font-size:12px;line-height:1.35;color:var(--mut)">Ship goods from warehouses to shops at least cost.</div></div>
+          <span style="color:var(--mut)">›</span>
+        </div>
+        <div onClick="{{ go.assignment }}" style="display:flex;align-items:center;gap:14px;padding:11px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;border-top:1px solid var(--line2)" style-hover="background:var(--head)" data-am-row="1">
+          <span data-am-glyph="1" style="flex:none;width:66px;height:48px;border-radius:10px;background:color-mix(in oklab, var(--ic) 9%, var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ic) 20%, transparent);display:flex;align-items:center;justify-content:center"><svg width="50" height="34" viewBox="0 0 38 26"><path d="M10 5 L28 13 M10 13 L28 21 M10 21 L28 5 M10 5 L28 21" stroke="var(--ic)" stroke-width="1" fill="none" opacity="0.28"></path><path data-am-flow="1" d="M10 5 L28 5 M10 13 L28 13 M10 21 L28 21" stroke="var(--ic)" stroke-width="1.7" fill="none"></path><g fill="var(--ic)"><circle cx="8" cy="5" r="2.5"></circle><circle cx="8" cy="13" r="2.5"></circle><circle cx="8" cy="21" r="2.5"></circle></g><g fill="var(--ic)" opacity="0.9"><rect x="27.5" y="2.6" width="5" height="5" rx="1.3"></rect><rect x="27.5" y="10.6" width="5" height="5" rx="1.3"></rect><rect x="27.5" y="18.6" width="5" height="5" rx="1.3"></rect></g></svg></span>
+          <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500">Assignment</div><div style="font-size:12px;line-height:1.35;color:var(--mut)">Give each worker exactly one task, minimising total cost.</div></div>
+          <span style="color:var(--mut)">›</span>
+        </div>
+        <div onClick="{{ go.transshipment }}" style="display:flex;align-items:center;gap:14px;padding:11px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;border-top:1px solid var(--line2)" style-hover="background:var(--head)" data-am-row="1">
+          <span data-am-glyph="1" style="flex:none;width:66px;height:48px;border-radius:10px;background:color-mix(in oklab, var(--ic) 9%, var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ic) 20%, transparent);display:flex;align-items:center;justify-content:center"><svg width="50" height="34" viewBox="0 0 38 26"><path data-am-flow="1" d="M8 13 L14.5 13 M23.5 11.5 L28.5 7 M23.5 14.5 L28.5 19" stroke="var(--ic)" stroke-width="1.7" fill="none"></path><rect x="15.5" y="9.5" width="7" height="7" rx="1.5" transform="rotate(45 19 13)" fill="none" stroke="var(--ic)" stroke-width="1.3"></rect><circle cx="19" cy="13" r="1.7" fill="var(--ic)"></circle><circle cx="5.5" cy="13" r="2.6" fill="var(--ic)"></circle><g fill="none" stroke="var(--ic)" stroke-width="1.4"><circle cx="31" cy="6" r="2.6"></circle><circle cx="31" cy="20" r="2.6"></circle></g></svg></span>
+          <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500">Transshipment</div><div style="font-size:12px;line-height:1.35;color:var(--mut)">Route goods through intermediate depots on the way.</div></div>
+          <span style="color:var(--mut)">›</span>
+        </div>
+        <div onClick="{{ go.mincostflow }}" style="display:flex;align-items:center;gap:14px;padding:11px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;border-top:1px solid var(--line2)" style-hover="background:var(--head)" data-am-row="1">
+          <span data-am-glyph="1" style="flex:none;width:66px;height:48px;border-radius:10px;background:color-mix(in oklab, var(--ic) 9%, var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ic) 20%, transparent);display:flex;align-items:center;justify-content:center"><svg width="50" height="34" viewBox="0 0 38 26"><path d="M6 13 L17 5 L32 13 M17 5 L17 21" stroke="var(--ic)" stroke-width="1.2" fill="none" opacity="0.3"></path><path data-am-flow="1" d="M6 13 L17 21 L32 13" stroke="var(--ic)" stroke-width="2.1" fill="none" stroke-linejoin="round"></path><g fill="var(--ic)"><circle cx="6" cy="13" r="2.6"></circle><circle cx="17" cy="21" r="2.6"></circle><circle cx="32" cy="13" r="2.6"></circle></g><circle cx="17" cy="5" r="2.4" fill="none" stroke="var(--ic)" stroke-width="1.3" opacity="0.65"></circle></svg></span>
+          <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500">Minimum cost flow</div><div style="font-size:12px;line-height:1.35;color:var(--mut)">Push a required amount through a network as cheaply as possible.</div></div>
+          <span style="color:var(--mut)">›</span>
+        </div>
+        <div onClick="{{ go.maxflow }}" style="display:flex;align-items:center;gap:14px;padding:11px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;border-top:1px solid var(--line2)" style-hover="background:var(--head)" data-am-row="1">
+          <span data-am-glyph="1" style="flex:none;width:66px;height:48px;border-radius:10px;background:color-mix(in oklab, var(--ic) 9%, var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ic) 20%, transparent);display:flex;align-items:center;justify-content:center"><svg width="50" height="34" viewBox="0 0 38 26"><path d="M7 13 C14 13 14 6 19 6 C24 6 24 13 31 13" stroke="var(--ic)" stroke-width="4" fill="none" opacity="0.3" stroke-linecap="round"></path><path data-am-flow="1" d="M7 13 C14 13 14 20 19 20 C24 20 24 13 31 13" stroke="var(--ic)" stroke-width="2.1" fill="none" stroke-linecap="round"></path><g fill="var(--ic)"><circle data-am-node="1" cx="5" cy="13" r="2.6"></circle><circle data-am-node="1" cx="33" cy="13" r="2.6"></circle></g></svg></span>
+          <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500">Maximum flow</div><div style="font-size:12px;line-height:1.35;color:var(--mut)">Find the most that can move from source to sink.</div></div>
+          <span style="color:var(--mut)">›</span>
+        </div>
+        <div onClick="{{ go.shortestpath }}" style="display:flex;align-items:center;gap:14px;padding:11px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;border-top:1px solid var(--line2)" style-hover="background:var(--head)" data-am-row="1">
+          <span data-am-glyph="1" style="flex:none;width:66px;height:48px;border-radius:10px;background:color-mix(in oklab, var(--ic) 9%, var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ic) 20%, transparent);display:flex;align-items:center;justify-content:center"><svg width="50" height="34" viewBox="0 0 38 26"><path d="M6 20 L22 16 M14 6 L22 16 M22 16 L32 8" stroke="var(--ic)" stroke-width="1.1" fill="none" opacity="0.3"></path><path data-am-flow="1" d="M6 20 L14 6 L32 8" stroke="var(--ic)" stroke-width="2.1" fill="none" stroke-linejoin="round"></path><g fill="var(--ic)"><circle cx="6" cy="20" r="2.7"></circle><circle cx="32" cy="8" r="2.7"></circle><circle cx="14" cy="6" r="2.1"></circle></g><circle cx="22" cy="16" r="2.1" fill="none" stroke="var(--ic)" stroke-width="1.3" opacity="0.6"></circle></svg></span>
+          <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500">Shortest path</div><div style="font-size:12px;line-height:1.35;color:var(--mut)">Cheapest route between two points in a network.</div></div>
+          <span style="color:var(--mut)">›</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 20px 10px;--ic:var(--teal);box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+      <div style="display:flex;align-items:baseline;gap:10px"><span style="width:8px;height:8px;border-radius:2px;background:var(--ic);align-self:center"></span><h2 style="margin:0;font-size:16px;font-weight:600">Selection</h2><span style="flex:none;white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ic);background:color-mix(in oklab, var(--ic) 10%, var(--surface));padding:2px 7px;border-radius:5px">3 models</span></div>
+      <p style="margin:4px 0 8px;font-size:12.5px;color:var(--mut)">Choose the best subset under limits.</p>
+      <div style="display:flex;flex-direction:column">
+        <div onClick="{{ go.knapsack }}" style="display:flex;align-items:center;gap:14px;padding:11px 8px;margin:0 -8px;border-radius:9px;cursor:pointer" style-hover="background:var(--head)" data-am-row="1">
+          <span data-am-glyph="1" style="flex:none;width:66px;height:48px;border-radius:10px;background:color-mix(in oklab, var(--ic) 9%, var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ic) 20%, transparent);display:flex;align-items:center;justify-content:center"><svg width="50" height="34" viewBox="0 0 38 26"><path d="M13 7 C13 3.5 25 3.5 25 7" stroke="var(--ic)" stroke-width="1.3" fill="none"></path><rect x="7.5" y="6.5" width="23" height="15.5" rx="3" stroke="var(--ic)" stroke-width="1.3" fill="none"></rect><g data-am-item="1" fill="var(--ic)" style="transform-origin:center"><rect x="10.5" y="15" width="7.5" height="4.8" rx="1"></rect><rect x="20" y="12.6" width="7.5" height="7.2" rx="1"></rect></g><rect x="10.5" y="10" width="5.5" height="3.2" rx="1" fill="var(--ic)" opacity="0.35"></rect></svg></span>
+          <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:13.5px;font-weight:500">Knapsack</span><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.04em;color:var(--warn);border:1px solid color-mix(in oklab, var(--warn) 40%, var(--line));background:color-mix(in oklab, var(--warn) 8%, var(--surface));border-radius:4px;padding:1.5px 5px">NP-HARD</span></div><div style="font-size:12px;line-height:1.35;color:var(--mut)">Pick the best items that fit a budget or weight — 0/1 and bounded.</div></div>
+          <span style="color:var(--mut)">›</span>
+        </div>
+        <div onClick="{{ go.setcovering }}" style="display:flex;align-items:center;gap:14px;padding:11px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;border-top:1px solid var(--line2)" style-hover="background:var(--head)" data-am-row="1">
+          <span data-am-glyph="1" style="flex:none;width:66px;height:48px;border-radius:10px;background:color-mix(in oklab, var(--ic) 9%, var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ic) 20%, transparent);display:flex;align-items:center;justify-content:center"><svg width="50" height="34" viewBox="0 0 38 26"><g fill="var(--ic)" opacity="0.13"><circle cx="14" cy="10" r="6.8"></circle><circle cx="19" cy="17" r="6.8"></circle></g><g stroke="var(--ic)" stroke-width="1.2" fill="none"><circle cx="14" cy="10" r="6.8"></circle><circle cx="19" cy="17" r="6.8"></circle></g><circle data-am-tour="1" cx="25" cy="10" r="6.8" stroke="var(--ic)" stroke-width="1.1" fill="none" stroke-dasharray="3 2.5" opacity="0.5"></circle><g fill="var(--ic)"><circle cx="12" cy="9" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle><circle cx="18" cy="19" r="1.6"></circle></g><circle cx="27" cy="9" r="1.6" fill="var(--ic)" opacity="0.35"></circle></svg></span>
+          <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:13.5px;font-weight:500">Set covering</span><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.04em;color:var(--warn);border:1px solid color-mix(in oklab, var(--warn) 40%, var(--line));background:color-mix(in oklab, var(--warn) 8%, var(--surface));border-radius:4px;padding:1.5px 5px">NP-HARD</span></div><div style="font-size:12px;line-height:1.35;color:var(--mut)">Choose the fewest sets that cover every requirement.</div></div>
+          <span style="color:var(--mut)">›</span>
+        </div>
+        <div onClick="{{ go.binpacking }}" style="display:flex;align-items:center;gap:14px;padding:11px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;border-top:1px solid var(--line2)" style-hover="background:var(--head)" data-am-row="1">
+          <span data-am-glyph="1" style="flex:none;width:66px;height:48px;border-radius:10px;background:color-mix(in oklab, var(--ic) 9%, var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ic) 20%, transparent);display:flex;align-items:center;justify-content:center"><svg width="50" height="34" viewBox="0 0 38 26"><path d="M4 8.5 L34 8.5" stroke="var(--ic)" stroke-width="1" stroke-dasharray="2.5 2.5" opacity="0.45"></path><path d="M6 5 L6 22 L14 22 L14 5 M16 5 L16 22 L24 22 L24 5 M26 5 L26 22 L34 22 L34 5" stroke="var(--ic)" stroke-width="1.2" fill="none"></path><g fill="var(--ic)"><rect x="6.9" y="14.2" width="6.2" height="7" rx="0.9"></rect><rect x="16.9" y="15.6" width="6.2" height="5.6" rx="0.9"></rect><rect data-am-item="1" x="16.9" y="10.2" width="6.2" height="4.6" rx="0.9" style="transform-origin:center"></rect><rect x="26.9" y="17.4" width="6.2" height="3.8" rx="0.9"></rect></g></svg></span>
+          <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:13.5px;font-weight:500">Bin packing</span><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.04em;color:var(--warn);border:1px solid color-mix(in oklab, var(--warn) 40%, var(--line));background:color-mix(in oklab, var(--warn) 8%, var(--surface));border-radius:4px;padding:1.5px 5px">NP-HARD</span></div><div style="font-size:12px;line-height:1.35;color:var(--mut)">Fit items into the fewest containers.</div></div>
+          <span style="color:var(--mut)">›</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 20px 10px;--ic:var(--rose);box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+      <div style="display:flex;align-items:baseline;gap:10px"><span style="width:8px;height:8px;border-radius:2px;background:var(--ic);align-self:center"></span><h2 style="margin:0;font-size:16px;font-weight:600">Routing &amp; sequencing</h2><span style="flex:none;white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ic);background:color-mix(in oklab, var(--ic) 10%, var(--surface));padding:2px 7px;border-radius:5px">3 models</span></div>
+      <p style="margin:4px 0 8px;font-size:12.5px;color:var(--mut)">Order and route work well.</p>
+      <div style="display:flex;flex-direction:column">
+        <div onClick="{{ go.tsp }}" style="display:flex;align-items:center;gap:14px;padding:11px 8px;margin:0 -8px;border-radius:9px;cursor:pointer" style-hover="background:var(--head)" data-am-row="1">
+          <span data-am-glyph="1" style="flex:none;width:66px;height:48px;border-radius:10px;background:color-mix(in oklab, var(--ic) 9%, var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ic) 20%, transparent);display:flex;align-items:center;justify-content:center"><svg width="50" height="34" viewBox="0 0 38 26"><path data-am-tour="1" d="M7 13 L14 4 L28 6 L32 16 L19 22 Z" stroke="var(--ic)" stroke-width="1.7" fill="var(--ic)" fill-opacity="0.11" stroke-linejoin="round"></path><g fill="var(--ic)"><circle cx="7" cy="13" r="2.7"></circle><circle cx="14" cy="4" r="2.1"></circle><circle cx="28" cy="6" r="2.1"></circle><circle cx="32" cy="16" r="2.1"></circle><circle cx="19" cy="22" r="2.1"></circle></g></svg></span>
+          <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:13.5px;font-weight:500">Travelling salesman</span><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.04em;color:var(--warn);border:1px solid color-mix(in oklab, var(--warn) 40%, var(--line));background:color-mix(in oklab, var(--warn) 8%, var(--surface));border-radius:4px;padding:1.5px 5px">NP-HARD</span></div><div style="font-size:12px;line-height:1.35;color:var(--mut)">Visit every stop once and return, minimising distance.</div></div>
+          <span style="color:var(--mut)">›</span>
+        </div>
+        <div onClick="{{ go.vrp }}" style="display:flex;align-items:center;gap:14px;padding:11px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;border-top:1px solid var(--line2)" style-hover="background:var(--head)" data-am-row="1">
+          <span data-am-glyph="1" style="flex:none;width:66px;height:48px;border-radius:10px;background:color-mix(in oklab, var(--ic) 9%, var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ic) 20%, transparent);display:flex;align-items:center;justify-content:center"><svg width="50" height="34" viewBox="0 0 38 26"><path data-am-tour="1" d="M19 13 L7 6 L5 18 Z" stroke="var(--ic)" stroke-width="1.4" fill="var(--ic)" fill-opacity="0.11" stroke-linejoin="round"></path><path d="M19 13 L31 5 L33 16 Z" stroke="var(--ic)" stroke-width="1.4" fill="var(--ic)" fill-opacity="0.11" stroke-linejoin="round" stroke-dasharray="4 2.5"></path><g fill="var(--ic)"><circle cx="7" cy="6" r="1.9"></circle><circle cx="5" cy="18" r="1.9"></circle><circle cx="31" cy="5" r="1.9"></circle><circle cx="33" cy="16" r="1.9"></circle></g><rect x="15.7" y="9.7" width="6.6" height="6.6" rx="1.5" fill="var(--ic)"></rect></svg></span>
+          <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:13.5px;font-weight:500">Vehicle routing</span><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.04em;color:var(--warn);border:1px solid color-mix(in oklab, var(--warn) 40%, var(--line));background:color-mix(in oklab, var(--warn) 8%, var(--surface));border-radius:4px;padding:1.5px 5px">NP-HARD</span></div><div style="font-size:12px;line-height:1.35;color:var(--mut)">Split stops across a fleet with capacity limits.</div></div>
+          <span style="color:var(--mut)">›</span>
+        </div>
+        <div onClick="{{ go.jobseq }}" style="display:flex;align-items:center;gap:14px;padding:11px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;border-top:1px solid var(--line2)" style-hover="background:var(--head)" data-am-row="1">
+          <span data-am-glyph="1" style="flex:none;width:66px;height:48px;border-radius:10px;background:color-mix(in oklab, var(--ic) 9%, var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ic) 20%, transparent);display:flex;align-items:center;justify-content:center"><svg width="50" height="34" viewBox="0 0 38 26"><path d="M4 23 L34 23" stroke="var(--ic)" stroke-width="1" opacity="0.4"></path><g fill="var(--ic)"><rect x="4.5" y="4" width="12" height="4.4" rx="1.4"></rect><rect data-am-bar="1" x="11" y="10.4" width="15" height="4.4" rx="1.4"></rect><rect x="7" y="16.8" width="9" height="4.4" rx="1.4"></rect></g><g fill="var(--ic)" opacity="0.32"><rect x="18" y="4" width="7" height="4.4" rx="1.4"></rect><rect x="18" y="16.8" width="10" height="4.4" rx="1.4"></rect></g></svg></span>
+          <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500">Job sequencing</div><div style="font-size:12px;line-height:1.35;color:var(--mut)">Order jobs on machines to finish soonest.</div></div>
+          <span style="color:var(--mut)">›</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 20px 10px;--ic:var(--purple);box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+      <div style="display:flex;align-items:baseline;gap:10px"><span style="width:8px;height:8px;border-radius:2px;background:var(--ic);align-self:center"></span><h2 style="margin:0;font-size:16px;font-weight:600">Matching</h2><span style="flex:none;white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ic);background:color-mix(in oklab, var(--ic) 10%, var(--surface));padding:2px 7px;border-radius:5px">3 models</span></div>
+      <p style="margin:4px 0 8px;font-size:12.5px;color:var(--mut)">Pair two sides so nobody is left worse off.</p>
+      <div style="display:flex;flex-direction:column">
+        <div onClick="{{ go.stable }}" style="display:flex;align-items:center;gap:14px;padding:11px 8px;margin:0 -8px;border-radius:9px;cursor:pointer" style-hover="background:var(--head)" data-am-row="1">
+          <span data-am-glyph="1" style="flex:none;width:66px;height:48px;border-radius:10px;background:color-mix(in oklab, var(--ic) 9%, var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ic) 20%, transparent);display:flex;align-items:center;justify-content:center"><svg width="50" height="34" viewBox="0 0 38 26"><path d="M10 6 L28 13 M10 13 L28 20" stroke="var(--ic)" stroke-width="1" stroke-dasharray="2.5 2.5" fill="none" opacity="0.35"></path><path data-am-flow="1" d="M10 6 L28 6 M10 13 L28 13 M10 20 L28 20" stroke="var(--ic)" stroke-width="1.6" fill="none"></path><g fill="var(--ic)"><rect x="5" y="4" width="5" height="4.4" rx="1.3"></rect><rect x="5" y="11" width="5" height="4.4" rx="1.3"></rect><rect x="5" y="18" width="5" height="4.4" rx="1.3"></rect></g><g fill="none" stroke="var(--ic)" stroke-width="1.4"><rect x="28" y="4" width="5" height="4.4" rx="1.3"></rect><rect x="28" y="11" width="5" height="4.4" rx="1.3"></rect><rect x="28" y="18" width="5" height="4.4" rx="1.3"></rect></g></svg></span>
+          <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500">Stable matching</div><div style="font-size:12px;line-height:1.35;color:var(--mut)">Pair two sides by preference so no pair wants to defect — Gale–Shapley.</div></div>
+          <span style="color:var(--mut)">›</span>
+        </div>
+        <div onClick="{{ go.bipartite }}" style="display:flex;align-items:center;gap:14px;padding:11px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;border-top:1px solid var(--line2)" style-hover="background:var(--head)" data-am-row="1">
+          <span data-am-glyph="1" style="flex:none;width:66px;height:48px;border-radius:10px;background:color-mix(in oklab, var(--ic) 9%, var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ic) 20%, transparent);display:flex;align-items:center;justify-content:center"><svg width="50" height="34" viewBox="0 0 38 26"><path d="M9 21 L29 13 M9 5 L29 13 M9 13 L29 5" stroke="var(--ic)" stroke-width="1" fill="none" opacity="0.28"></path><path data-am-flow="1" d="M9 5 L29 5 M9 13 L29 21" stroke="var(--ic)" stroke-width="2" fill="none"></path><g fill="var(--ic)"><circle cx="7" cy="5" r="2.5"></circle><circle cx="7" cy="13" r="2.5"></circle><circle cx="31" cy="5" r="2.5"></circle><circle cx="31" cy="21" r="2.5"></circle></g><g fill="none" stroke="var(--ic)" stroke-width="1.3" opacity="0.55"><circle cx="7" cy="21" r="2.2"></circle><circle cx="31" cy="13" r="2.2"></circle></g></svg></span>
+          <div style="flex:1;min-width:0"><div style="font-size:13.5px;font-weight:500">Bipartite matching</div><div style="font-size:12px;line-height:1.35;color:var(--mut)">Match as many pairs as possible across two groups.</div></div>
+          <span style="color:var(--mut)">›</span>
+        </div>
+        <div onClick="{{ go.gifts }}" style="display:flex;align-items:center;gap:14px;padding:11px 8px;margin:0 -8px;border-radius:9px;cursor:pointer;border-top:1px solid var(--line2)" style-hover="background:var(--head)" data-am-row="1">
+          <span data-am-glyph="1" style="flex:none;width:66px;height:48px;border-radius:10px;background:color-mix(in oklab, var(--ic) 9%, var(--surface));box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--ic) 20%, transparent);display:flex;align-items:center;justify-content:center"><svg width="50" height="34" viewBox="0 0 38 26"><rect x="10" y="11" width="18" height="11" rx="1.8" fill="none" stroke="var(--ic)" stroke-width="1.4"></rect><rect x="8.5" y="7" width="21" height="4.4" rx="1.4" fill="var(--ic)"></rect><path d="M19 7 L19 22" stroke="var(--ic)" stroke-width="1.4"></path><circle data-am-node="1" cx="15.5" cy="4.5" r="2.2" fill="none" stroke="var(--ic)" stroke-width="1.3"></circle><circle data-am-node="1" cx="22.5" cy="4.5" r="2.2" fill="none" stroke="var(--ic)" stroke-width="1.3"></circle></svg></span>
+          <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:13.5px;font-weight:500">Gift assignment</span><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:0.04em;color:var(--teal);border:1px solid color-mix(in oklab, var(--teal) 40%, var(--line));background:color-mix(in oklab, var(--teal) 8%, var(--surface));border-radius:4px;padding:1.5px 5px">BOARD</span></div><div style="font-size:12px;line-height:1.35;color:var(--mut)">List gifts by name and hand them out — each one leaves the pile as you give it.</div></div>
+          <span style="color:var(--mut)">›</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isEdT }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Input editor — transportation" style="max-width:1020px;margin:0 auto;padding:28px 24px 72px">
+  <div style="font-size:12px;color:var(--mut)"><a onClick="{{ goHome }}" style="cursor:pointer" style-hover="color:var(--ink)">Problems</a> / {{ modelName }}</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-top:4px;flex-wrap:wrap">
+    <input value="{{ title }}" onChange="{{ onTitle }}" style="font-size:21px;font-weight:600;letter-spacing:-0.01em;background:none;border:none;outline:none;padding:2px 0;min-width:180px;flex:1" style-focus="background:var(--head);border-radius:6px">
+    <button onClick="{{ onLoadExample }}" style="padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500" style-hover="border-color:var(--mut)">Load example</button>
+    <button onClick="{{ onPasteToggle }}" style="{{ pasteBtnS }}" style-hover="border-color:var(--mut)">Paste data</button>
+    <div style="display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden">
+      <button onClick="{{ onModeMatrix }}" style="{{ modeMatrixS }}">Matrix</button>
+      <button onClick="{{ onModeGraph }}" style="{{ modeGraphS }}">Graph</button>
+    </div>
+    <button onClick="{{ onSolve }}" style="padding:8px 16px;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font-size:12.5px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,0.15)" style-hover="filter:brightness(1.1)">Solve →</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;margin:12px 0 18px;flex-wrap:wrap">
+    <span style="{{ badgeStyle }}">{{ badgeTxt }}</span>
+    <sc-if value="{{ showDummy }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ onAddDummy }}" style="padding:4px 9px;border:1px solid var(--accent);color:var(--accent);border-radius:6px;background:none;cursor:pointer;font-size:11.5px;font-weight:600" style-hover="background:color-mix(in oklab, var(--accent) 8%, var(--surface))">{{ dummyLabel }}</button>
+    </sc-if>
+    <span style="font-size:12px;color:var(--mut)">{{ sizeTxt }}</span>
+  </div>
+
+  <sc-if value="{{ pasteOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="margin-bottom:18px;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:14px 16px">
+      <div style="font-size:12.5px;font-weight:600">Paste from a spreadsheet</div>
+      <div style="margin-top:2px;font-size:12px;color:var(--mut)">Copy a cost range in Excel or Sheets and paste it here — tabs, commas and newlines are understood. Rows become sources, columns become destinations.</div>
+      <textarea value="{{ pasteTxt }}" onChange="{{ onPasteTxt }}" rows="4" placeholder="3	1	7	4&#10;2	6	5	9&#10;8	3	3	2" style="margin-top:10px;width:100%;box-sizing:border-box;resize:vertical;background:var(--head);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;outline:none"></textarea>
+      <div style="margin-top:10px;display:flex;gap:8px">
+        <button onClick="{{ onPasteApply }}" style="padding:7px 13px;border:none;border-radius:7px;background:var(--ink);color:var(--bg);cursor:pointer;font-size:12px;font-weight:600">Apply</button>
+        <button onClick="{{ onPasteToggle }}" style="padding:7px 13px;border:1px solid var(--line);border-radius:7px;background:none;cursor:pointer;font-size:12px;font-weight:500">Cancel</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isMatrix }}" hint-placeholder-val="{{ true }}">
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px">
+      <div style="overflow-x:auto">
+        <div style="display:inline-flex;align-items:stretch;gap:8px">
+        <div style="display:inline-block;border:1px solid var(--line);border-radius:10px;overflow:hidden;align-self:flex-start">
+          <div style="display:flex">
+            <div style="width:140px;height:40px;background:var(--head);border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);display:flex;align-items:center;padding-left:12px;box-sizing:border-box;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut)">cost / unit</div>
+            <sc-for list="{{ eHead }}" as="x" hint-placeholder-count="4">
+              <div style="position:relative;width:96px;height:40px;background:var(--head);border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);display:flex;align-items:center;box-sizing:border-box">
+                <input value="{{ x.v }}" onChange="{{ x.on }}" style="width:100%;text-align:center;background:none;border:none;outline:none;font-size:12px;font-weight:600;padding:0" style-focus="background:var(--surface)">
+                <button onClick="{{ x.onDel }}" title="Remove destination" style="position:absolute;top:2px;right:2px;width:14px;height:14px;border:none;border-radius:4px;background:none;cursor:pointer;font-size:10px;line-height:1;color:var(--mut);opacity:0;padding:0" style-hover="opacity:1;background:var(--line2)">×</button>
+              </div>
+            </sc-for>
+            <div style="width:104px;height:40px;background:var(--head);border-bottom:1px solid var(--line2);display:flex;align-items:center;justify-content:flex-end;padding-right:14px;box-sizing:border-box;font-size:11.5px;font-weight:600">Supply</div>
+          </div>
+          <sc-for list="{{ eRows }}" as="r" hint-placeholder-count="3">
+            <div style="display:flex">
+              <div style="position:relative;width:140px;height:48px;background:var(--head);border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);display:flex;align-items:center;box-sizing:border-box">
+                <input value="{{ r.name }}" onChange="{{ r.onName }}" style="width:100%;background:none;border:none;outline:none;font-size:12.5px;font-weight:600;padding:0 12px" style-focus="background:var(--surface)">
+                <button onClick="{{ r.onDel }}" title="Remove source" style="position:absolute;top:2px;right:2px;width:14px;height:14px;border:none;border-radius:4px;background:none;cursor:pointer;font-size:10px;line-height:1;color:var(--mut);opacity:0;padding:0" style-hover="opacity:1;background:var(--line2)">×</button>
+              </div>
+              <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="4">
+                <div style="width:96px;height:48px;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);box-sizing:border-box">
+                  <input value="{{ c.v }}" onChange="{{ c.on }}" inputMode="numeric" style="width:100%;height:100%;box-sizing:border-box;text-align:right;padding:0 14px;background:none;border:none;outline:none;font-family:'IBM Plex Mono',monospace;font-size:14px" style-focus="background:var(--head)">
+                </div>
+              </sc-for>
+              <div style="width:104px;height:48px;background:var(--head);border-bottom:1px solid var(--line2);box-sizing:border-box">
+                <input value="{{ r.supply }}" onChange="{{ r.onSupply }}" inputMode="numeric" style="width:100%;height:100%;box-sizing:border-box;text-align:right;padding:0 14px;background:none;border:none;outline:none;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500" style-focus="background:var(--surface)">
+              </div>
+            </div>
+          </sc-for>
+          <div style="display:flex">
+            <div style="width:140px;height:44px;background:var(--head);border-right:1px solid var(--line2);display:flex;align-items:center;padding-left:12px;box-sizing:border-box;font-size:11.5px;font-weight:600">Demand</div>
+            <sc-for list="{{ eDemand }}" as="d" hint-placeholder-count="4">
+              <div style="width:96px;height:44px;background:var(--head);border-right:1px solid var(--line2);box-sizing:border-box">
+                <input value="{{ d.v }}" onChange="{{ d.on }}" inputMode="numeric" style="width:100%;height:100%;box-sizing:border-box;text-align:right;padding:0 14px;background:none;border:none;outline:none;font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:500" style-focus="background:var(--surface)">
+              </div>
+            </sc-for>
+            <div style="width:104px;height:44px;background:var(--head);display:flex;align-items:center;justify-content:flex-end;padding-right:14px;box-sizing:border-box;font-family:'IBM Plex Mono',monospace;font-size:12px;color:{{ cornerC }};font-weight:{{ cornerW }}">{{ cornerTxt }}</div>
+          </div>
+        </div>
+        <button onClick="{{ onAddDest }}" title="Add destination" style="flex:none;width:38px;border:1px dashed var(--line);border-radius:10px;background:none;cursor:pointer;color:var(--mut);display:flex;align-items:center;justify-content:center;padding:0" style-hover="border-color:var(--accent);color:var(--accent);background:color-mix(in oklab, var(--accent) 5%, var(--surface))"><span style="writing-mode:vertical-rl;font-size:12px;font-weight:500;letter-spacing:0.02em;white-space:nowrap">+ Add destination</span></button>
+        </div>
+      </div>
+      <button onClick="{{ onAddSource }}" style="margin-top:8px;width:100%;box-sizing:border-box;padding:8px;border:1px dashed var(--line);border-radius:10px;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--accent);color:var(--accent);background:color-mix(in oklab, var(--accent) 5%, var(--surface))">+ Add source</button>
+      <div style="margin-top:12px;font-size:11.5px;color:var(--mut)">Click any cell to edit — Tab moves across. Names are editable too. The matrix and the graph are two views of the same model.</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isGraph }}" hint-placeholder-val="{{ false }}">
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px">
+      <svg width="640" height="{{ gH }}" style="max-width:100%">{{ gEls }}</svg>
+      <div style="margin-top:8px;font-size:11.5px;color:var(--mut)">Each edge carries its unit cost. Sources on the left (supply inside the node), destinations on the right (demand). Switch back to Matrix to edit values.</div>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isEdA }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Input editor — assignment" style="max-width:1020px;margin:0 auto;padding:28px 24px 72px">
+  <div style="font-size:12px;color:var(--mut)"><a onClick="{{ goHome }}" style="cursor:pointer" style-hover="color:var(--ink)">Problems</a> / {{ modelName }}</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-top:4px;flex-wrap:wrap">
+    <input value="{{ title }}" onChange="{{ onTitle }}" style="font-size:21px;font-weight:600;letter-spacing:-0.01em;background:none;border:none;outline:none;padding:2px 0;min-width:180px;flex:1" style-focus="background:var(--head);border-radius:6px">
+    <button onClick="{{ onLoadExample }}" style="padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500" style-hover="border-color:var(--mut)">Load example</button>
+    <button onClick="{{ onSolve }}" style="padding:8px 16px;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font-size:12.5px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,0.15)" style-hover="filter:brightness(1.1)">Solve →</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;margin:12px 0 18px;flex-wrap:wrap">
+    <span style="{{ aBadgeS }}">{{ aBadgeT }}</span>
+    <sc-if value="{{ aShowDummy }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ onAsgDummy }}" style="padding:4px 9px;border:1px solid var(--accent);color:var(--accent);border-radius:6px;background:none;cursor:pointer;font-size:11.5px;font-weight:600" style-hover="background:color-mix(in oklab, var(--accent) 8%, var(--surface))">{{ aDummyLabel }}</button>
+    </sc-if>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px">
+    <div style="overflow-x:auto">
+      <div style="display:inline-flex;align-items:stretch;gap:8px">
+      <div style="display:inline-block;border:1px solid var(--line);border-radius:10px;overflow:hidden;align-self:flex-start">
+        <div style="display:flex">
+          <div style="width:140px;height:40px;background:var(--head);border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);display:flex;align-items:center;padding-left:12px;box-sizing:border-box;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut)">hours / task</div>
+          <sc-for list="{{ aHead }}" as="x" hint-placeholder-count="4">
+            <div style="position:relative;width:96px;height:40px;background:var(--head);border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);display:flex;align-items:center;box-sizing:border-box">
+              <input value="{{ x.v }}" onChange="{{ x.on }}" style="width:100%;text-align:center;background:none;border:none;outline:none;font-size:12px;font-weight:600;padding:0" style-focus="background:var(--surface)">
+              <button onClick="{{ x.onDel }}" title="Remove task" style="position:absolute;top:2px;right:2px;width:14px;height:14px;border:none;border-radius:4px;background:none;cursor:pointer;font-size:10px;line-height:1;color:var(--mut);opacity:0;padding:0" style-hover="opacity:1;background:var(--line2)">×</button>
+            </div>
+          </sc-for>
+        </div>
+        <sc-for list="{{ aERows }}" as="r" hint-placeholder-count="4">
+          <div style="display:flex">
+            <div style="position:relative;width:140px;height:48px;background:var(--head);border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);display:flex;align-items:center;box-sizing:border-box">
+              <input value="{{ r.name }}" onChange="{{ r.onName }}" style="width:100%;background:none;border:none;outline:none;font-size:12.5px;font-weight:600;padding:0 12px" style-focus="background:var(--surface)">
+              <button onClick="{{ r.onDel }}" title="Remove worker" style="position:absolute;top:2px;right:2px;width:14px;height:14px;border:none;border-radius:4px;background:none;cursor:pointer;font-size:10px;line-height:1;color:var(--mut);opacity:0;padding:0" style-hover="opacity:1;background:var(--line2)">×</button>
+            </div>
+            <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="4">
+              <div style="width:96px;height:48px;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);box-sizing:border-box">
+                <input value="{{ c.v }}" onChange="{{ c.on }}" inputMode="numeric" style="width:100%;height:100%;box-sizing:border-box;text-align:right;padding:0 14px;background:none;border:none;outline:none;font-family:'IBM Plex Mono',monospace;font-size:14px" style-focus="background:var(--head)">
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </div>
+      <button onClick="{{ onAddTask }}" title="Add task" style="flex:none;width:38px;border:1px dashed var(--line);border-radius:10px;background:none;cursor:pointer;color:var(--mut);display:flex;align-items:center;justify-content:center;padding:0" style-hover="border-color:var(--accent);color:var(--accent);background:color-mix(in oklab, var(--accent) 5%, var(--surface))"><span style="writing-mode:vertical-rl;font-size:12px;font-weight:500;letter-spacing:0.02em;white-space:nowrap">+ Add task</span></button>
+      </div>
+    </div>
+    <button onClick="{{ onAddWorker }}" style="margin-top:8px;width:100%;box-sizing:border-box;padding:8px;border:1px dashed var(--line);border-radius:10px;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--accent);color:var(--accent);background:color-mix(in oklab, var(--accent) 5%, var(--surface))">+ Add worker</button>
+    <div style="margin-top:12px;font-size:11.5px;color:var(--mut)">Each cell is the cost of giving that task to that worker. The Hungarian method needs a square matrix — add a dummy if the sides differ.</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isEdL }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Input editor — item list" style="max-width:840px;margin:0 auto;padding:28px 24px 72px">
+  <div style="font-size:12px;color:var(--mut)"><a onClick="{{ goHome }}" style="cursor:pointer" style-hover="color:var(--ink)">Problems</a> / {{ modelName }}</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-top:4px;flex-wrap:wrap">
+    <input value="{{ title }}" onChange="{{ onTitle }}" style="font-size:21px;font-weight:600;letter-spacing:-0.01em;background:none;border:none;outline:none;padding:2px 0;min-width:180px;flex:1" style-focus="background:var(--head);border-radius:6px">
+    <button onClick="{{ onLoadExample }}" style="padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500" style-hover="border-color:var(--mut)">Load example</button>
+    <button onClick="{{ onSolve }}" style="padding:8px 16px;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font-size:12.5px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,0.15)" style-hover="filter:brightness(1.1)">Solve →</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;margin:12px 0 18px;flex-wrap:wrap">
+    <span style="{{ lBadgeS }}">{{ lBadgeT }}</span>
+    <sc-if value="{{ hasCap }}" hint-placeholder-val="{{ false }}">
+      <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--mut)">{{ capLabel }}
+        <input value="{{ capV }}" onChange="{{ onCap }}" inputMode="numeric" style="width:64px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--surface);font-family:'IBM Plex Mono',monospace;font-size:13px;text-align:right;outline:none" style-focus="border-color:var(--mut)">{{ capUnit }}</span>
+    </sc-if>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px">
+    <div style="border:1px solid var(--line);border-radius:10px;overflow:hidden">
+      <div style="display:flex;background:var(--head);border-bottom:1px solid var(--line2)">
+        <div style="flex:1;min-width:180px;height:38px;display:flex;align-items:center;padding-left:14px;box-sizing:border-box;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut)">ITEM</div>
+        <sc-for list="{{ lCols }}" as="col" hint-placeholder-count="2"><div style="{{ col.hStyle }}">{{ col.l }}</div></sc-for>
+        <div style="width:40px"></div>
+      </div>
+      <sc-for list="{{ lRows }}" as="r" hint-placeholder-count="5">
+        <div style="display:flex;border-bottom:1px solid var(--line2)" style-hover="background:var(--head)">
+          <div style="flex:1;min-width:180px;height:46px;display:flex;align-items:center;box-sizing:border-box">
+            <input value="{{ r.name }}" onChange="{{ r.onName }}" style="width:100%;background:none;border:none;outline:none;font-size:13px;font-weight:500;padding:0 14px" style-focus="background:var(--surface)">
+          </div>
+          <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="2">
+            <div style="{{ c.wrapStyle }}"><input value="{{ c.v }}" onChange="{{ c.on }}" style="{{ c.inStyle }}" style-focus="background:var(--surface)"></div>
+          </sc-for>
+          <div style="width:40px;display:flex;align-items:center;justify-content:center"><button onClick="{{ r.onDel }}" title="Remove item" style="width:18px;height:18px;border:none;border-radius:5px;background:none;cursor:pointer;font-size:11px;line-height:1;color:var(--mut);padding:0" style-hover="background:var(--line2)">×</button></div>
+        </div>
+      </sc-for>
+      <div style="display:flex;background:var(--head)">
+        <div style="flex:1;min-width:180px;height:40px;display:flex;align-items:center;padding-left:14px;box-sizing:border-box;font-size:11.5px;font-weight:600;white-space:nowrap">{{ lTotLabel }}</div>
+        <sc-for list="{{ lTotals }}" as="t" hint-placeholder-count="2"><div style="{{ t.style }}">{{ t.v }}</div></sc-for>
+        <div style="width:40px"></div>
+      </div>
+    </div>
+    <button onClick="{{ onAddItem }}" style="margin-top:8px;width:100%;box-sizing:border-box;padding:8px;border:1px dashed var(--line);border-radius:10px;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--accent);color:var(--accent);background:color-mix(in oklab, var(--accent) 5%, var(--surface))">+ Add item</button>
+    <div style="margin-top:12px;font-size:11.5px;color:var(--mut)">{{ lHint }}</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isEdG }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Input editor — graph" style="max-width:1020px;margin:0 auto;padding:28px 24px 72px">
+  <div style="font-size:12px;color:var(--mut)"><a onClick="{{ goHome }}" style="cursor:pointer" style-hover="color:var(--ink)">Problems</a> / {{ modelName }}</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-top:4px;flex-wrap:wrap">
+    <input value="{{ title }}" onChange="{{ onTitle }}" style="font-size:21px;font-weight:600;letter-spacing:-0.01em;background:none;border:none;outline:none;padding:2px 0;min-width:180px;flex:1" style-focus="background:var(--head);border-radius:6px">
+    <button onClick="{{ onLoadExample }}" style="padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500" style-hover="border-color:var(--mut)">Load example</button>
+    <button onClick="{{ onSolve }}" style="padding:8px 16px;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font-size:12.5px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,0.15)" style-hover="filter:brightness(1.1)">Solve →</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;margin:12px 0 18px;flex-wrap:wrap">
+    <span style="{{ gBadgeS }}">{{ gBadgeT }}</span>
+    <sc-if value="{{ gFT }}" hint-placeholder-val="{{ false }}">
+      <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--mut)">From
+        <select value="{{ gFrom }}" onChange="{{ onGFrom }}" style="padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;cursor:pointer;font-weight:600">{{ gOptEls }}</select>
+        to
+        <select value="{{ gTo }}" onChange="{{ onGTo }}" style="padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;cursor:pointer;font-weight:600">{{ gOptEls }}</select>
+      </span>
+    </sc-if>
+    <sc-if value="{{ gIsVrp }}" hint-placeholder-val="{{ false }}">
+      <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--mut)">Vehicles
+        <input value="{{ gVeh }}" onChange="{{ onGVeh }}" inputMode="numeric" style="width:44px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;background:var(--surface);font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-align:right;outline:none" style-focus="border-color:var(--mut)">
+      </span>
+    </sc-if>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(0,1.5fr) minmax(300px,1fr);gap:18px;align-items:start">
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px">
+      <svg viewBox="0 0 560 {{ geH }}" style="width:100%;height:auto">{{ geEls }}</svg>
+      <div style="margin-top:8px;font-size:11.5px;color:var(--mut)">{{ gDiagHint }}</div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut)">NODES</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 14px">
+        <sc-for list="{{ gNodeChips }}" as="n" hint-placeholder-count="6">
+          <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 6px 3px 10px;border-radius:999px;border:1px solid var(--line);background:var(--head);font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600">{{ n.id }}<button onClick="{{ n.onDel }}" title="Remove node" style="width:15px;height:15px;border:none;border-radius:50%;background:none;cursor:pointer;font-size:10px;line-height:1;color:var(--mut);padding:0" style-hover="background:var(--line2)">×</button></span>
+        </sc-for>
+      </div>
+      <div style="display:flex;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut);padding-bottom:8px;border-bottom:1px solid var(--line2)">
+        <span style="width:78px">FROM</span><span style="width:78px">TO</span><span style="flex:1;text-align:right">{{ gWHead }}</span><span style="width:34px"></span>
+      </div>
+      <sc-for list="{{ gERows }}" as="e" hint-placeholder-count="6">
+        <div style="display:flex;align-items:center;padding:5px 0;border-bottom:1px solid var(--line2)">
+          <span style="width:78px"><select value="{{ e.a }}" onChange="{{ e.onA }}" style="width:62px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;cursor:pointer">{{ e.optEls }}</select></span>
+          <span style="width:78px"><select value="{{ e.b }}" onChange="{{ e.onB }}" style="width:62px;padding:4px 6px;border:1px solid var(--line);border-radius:6px;background:var(--surface);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;cursor:pointer">{{ e.optEls }}</select></span>
+          <span style="flex:1;display:flex;justify-content:flex-end"><input value="{{ e.w }}" onChange="{{ e.onW }}" inputMode="numeric" style="width:60px;padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-align:right;outline:none" style-focus="border-color:var(--mut)"></span>
+          <span style="width:34px;display:flex;justify-content:flex-end"><button onClick="{{ e.onDel }}" title="Remove edge" style="width:18px;height:18px;border:none;border-radius:5px;background:none;cursor:pointer;font-size:11px;line-height:1;color:var(--mut);padding:0" style-hover="background:var(--line2)">×</button></span>
+        </div>
+      </sc-for>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button onClick="{{ onAddEdge }}" style="flex:1;padding:8px;border:1px dashed var(--line);border-radius:10px;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--accent);color:var(--accent);background:color-mix(in oklab, var(--accent) 5%, var(--surface))">+ Add edge</button>
+        <button onClick="{{ onAddNode }}" style="flex:1;padding:8px;border:1px dashed var(--line);border-radius:10px;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--accent);color:var(--accent);background:color-mix(in oklab, var(--accent) 5%, var(--surface))">+ Add node</button>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isEdP }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Input editor — preferences" style="max-width:1020px;margin:0 auto;padding:28px 24px 72px">
+  <div style="font-size:12px;color:var(--mut)"><a onClick="{{ goHome }}" style="cursor:pointer" style-hover="color:var(--ink)">Problems</a> / {{ modelName }}</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-top:4px;flex-wrap:wrap">
+    <input value="{{ title }}" onChange="{{ onTitle }}" style="font-size:21px;font-weight:600;letter-spacing:-0.01em;background:none;border:none;outline:none;padding:2px 0;min-width:180px;flex:1" style-focus="background:var(--head);border-radius:6px">
+    <button onClick="{{ onLoadExample }}" style="padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500" style-hover="border-color:var(--mut)">Load example</button>
+    <button onClick="{{ onSolve }}" style="padding:8px 16px;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font-size:12.5px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,0.15)" style-hover="filter:brightness(1.1)">Solve →</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px;margin:12px 0 18px;flex-wrap:wrap">
+    <span style="{{ pBadgeS }}">{{ pBadgeT }}</span>
+    <span style="font-size:12px;color:var(--mut)">Preferences read left to right — rank 1 first. Click a chip to move it up one rank.</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:18px;align-items:start">
+
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut)">{{ pLHead }}</div>
+      <sc-for list="{{ pLRows }}" as="r" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line2)">
+          <input value="{{ r.name }}" onChange="{{ r.onName }}" style="width:104px;flex:none;background:none;border:none;outline:none;font-size:13px;font-weight:600;padding:4px 2px" style-focus="background:var(--head);border-radius:5px">
+          <div style="flex:1;display:flex;gap:6px;flex-wrap:wrap">
+            <sc-for list="{{ r.chips }}" as="c"><button onClick="{{ c.on }}" title="Move up one rank" style="{{ c.style }}"><span style="{{ c.rankS }}">{{ c.rank }}</span>{{ c.name }}</button></sc-for>
+          </div>
+          <button onClick="{{ r.onDel }}" title="Remove person" style="width:18px;height:18px;flex:none;border:none;border-radius:5px;background:none;cursor:pointer;font-size:11px;line-height:1;color:var(--mut);padding:0" style-hover="background:var(--line2)">×</button>
+        </div>
+      </sc-for>
+      <button onClick="{{ onAddL }}" style="margin-top:10px;width:100%;box-sizing:border-box;padding:8px;border:1px dashed var(--line);border-radius:10px;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--accent);color:var(--accent);background:color-mix(in oklab, var(--accent) 5%, var(--surface))">{{ pAddL }}</button>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut)">{{ pRHead }}</div>
+      <sc-for list="{{ pRRows }}" as="r" hint-placeholder-count="3">
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line2)">
+          <input value="{{ r.name }}" onChange="{{ r.onName }}" style="width:104px;flex:none;background:none;border:none;outline:none;font-size:13px;font-weight:600;padding:4px 2px" style-focus="background:var(--head);border-radius:5px">
+          <div style="flex:1;display:flex;gap:6px;flex-wrap:wrap">
+            <sc-for list="{{ r.chips }}" as="c"><button onClick="{{ c.on }}" title="Move up one rank" style="{{ c.style }}"><span style="{{ c.rankS }}">{{ c.rank }}</span>{{ c.name }}</button></sc-for>
+          </div>
+          <button onClick="{{ r.onDel }}" title="Remove person" style="width:18px;height:18px;flex:none;border:none;border-radius:5px;background:none;cursor:pointer;font-size:11px;line-height:1;color:var(--mut);padding:0" style-hover="background:var(--line2)">×</button>
+        </div>
+      </sc-for>
+      <button onClick="{{ onAddR }}" style="margin-top:10px;width:100%;box-sizing:border-box;padding:8px;border:1px dashed var(--line);border-radius:10px;background:none;cursor:pointer;font-size:12px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--accent);color:var(--accent);background:color-mix(in oklab, var(--accent) 5%, var(--surface))">{{ pAddR }}</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isEdGift }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Gift assignment board" style="max-width:1060px;margin:0 auto;padding:28px 24px 72px">
+  <div style="font-size:12px;color:var(--mut)"><a onClick="{{ goHome }}" style="cursor:pointer" style-hover="color:var(--ink)">Problems</a> / Gift assignment</div>
+  <div style="display:flex;align-items:center;gap:10px;margin-top:4px;flex-wrap:wrap">
+    <input value="{{ title }}" onChange="{{ onTitle }}" style="font-size:21px;font-weight:600;letter-spacing:-0.01em;background:none;border:none;outline:none;padding:2px 0;min-width:180px;flex:1" style-focus="background:var(--head);border-radius:6px">
+    <button onClick="{{ onLoadExample }}" style="padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500" style-hover="border-color:var(--mut)">Load example</button>
+    <button onClick="{{ onGfSpread }}" style="{{ gfSpreadS }}" style-hover="border-color:var(--mut)">Spread the rest evenly</button>
+  </div>
+
+  <sc-if value="{{ gfIsFolders }}" hint-placeholder-val="{{ true }}">
+  <div style="margin-top:16px">
+    <div style="font-size:12px;color:var(--mut);margin-bottom:14px">One folder per occasion — click a card to open it, ✎ to rename, × to delete.</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;align-items:start">
+      <sc-for list="{{ gfFolders }}" as="o" hint-placeholder-count="3">
+        <div onClick="{{ o.on }}" style="{{ o.cardS }}" style-hover="{{ o.cardHover }}">
+          <div style="display:flex;align-items:center;gap:6px">
+            <input value="{{ o.name }}" onChange="{{ o.onName }}" onClick="{{ o.stop }}" title="Click to rename" style="flex:1;min-width:0;background:none;border:1px solid transparent;outline:none;padding:3px 6px;margin:-3px -6px;font-family:inherit;font-size:15px;font-weight:600;letter-spacing:-0.01em;color:var(--ink);cursor:text;border-radius:7px" style-hover="border-color:var(--line);background:var(--head)" style-focus="border-color:var(--accent);background:var(--surface)" />
+            <button onClick="{{ o.onRename }}" title="Rename occasion" style="flex:none;width:26px;height:26px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:pointer;font-size:12px;line-height:1;color:var(--mut);padding:0" style-hover="border-color:var(--accent);color:var(--accent)">✎</button>
+            <button onClick="{{ o.onDel }}" title="Delete occasion" style="{{ o.delS }}" style-hover="border-color:var(--rose);background:color-mix(in oklab, var(--rose) 10%, var(--surface));color:var(--rose)">×</button>
+          </div>
+          <div style="font-size:12.5px;color:var(--mut)">{{ o.meta }}</div>
+          <div style="{{ o.barS }}"><div style="{{ o.barFillS }}"></div></div>
+          <div style="{{ o.statS }}">{{ o.stat }}</div>
+        </div>
+      </sc-for>
+      <button onClick="{{ onGfAddOcc }}" style="min-height:124px;border:1px dashed var(--line);border-radius:12px;background:none;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--accent);color:var(--accent)">+ New occasion</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ gfIsBoard }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;align-items:center;gap:8px;margin:14px 0 0;flex-wrap:wrap">
+    <button onClick="{{ onGfBack }}" style="padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--mut);color:var(--ink)">← All occasions</button>
+    <sc-for list="{{ gfOccs }}" as="o" hint-placeholder-count="2">
+      <div onClick="{{ o.on }}" style="{{ o.wrapS }}" style-hover="{{ o.hoverS }}">
+        <input value="{{ o.name }}" onChange="{{ o.onName }}" style="{{ o.inputS }}" />
+        <span style="{{ o.cntS }}">{{ o.cnt }}</span>
+        <button onClick="{{ o.onDel }}" title="Delete occasion" style="{{ o.delS }}" style-hover="{{ o.delHover }}">×</button>
+      </div>
+    </sc-for>
+    <button onClick="{{ onGfAddOcc }}" style="padding:7px 12px;border:1px dashed var(--line);border-radius:999px;background:none;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--accent);color:var(--accent)">+ Occasion</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;margin:12px 0 18px;flex-wrap:wrap">
+    <span style="{{ gfBadgeS }}">{{ gfBadgeT }}</span>
+    <span style="font-size:12px;color:var(--mut)">Drag a gift onto a friend — or click to pick it up, then click a friend. Use +/− for copies of the same gift, × to delete it.</span>
+  </div>
+  <div style="display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start">
+    <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px">
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut)">GIFTS LEFT · {{ gfLeft }}</div>
+      <div style="display:flex;flex-direction:column;gap:7px;margin-top:10px">
+        <sc-for list="{{ gfPool }}" as="g" hint-placeholder-count="5">
+          <div draggable="{{ true }}" onDragStart="{{ g.onDragStart }}" onDragEnd="{{ g.onDragEnd }}" onClick="{{ g.on }}" style="{{ g.style }}" style-hover="{{ g.hoverS }}"><span style="{{ g.dotStyle }}"></span>
+            <span style="flex:1;min-width:0">{{ g.name }}</span>
+            <span style="{{ g.qtyStyle }}">{{ g.qtyTxt }}</span>
+            <span style="display:flex;gap:3px;flex:none">
+              <button onClick="{{ g.onDec }}" title="Fewer copies" style="{{ g.stepStyle }}" style-hover="{{ g.stepHover }}">−</button>
+              <button onClick="{{ g.onInc }}" title="More copies" style="{{ g.stepStyle }}" style-hover="{{ g.stepHover }}">+</button>
+              <button onClick="{{ g.onDelete }}" title="Delete gift" style="{{ g.delStyle }}" style-hover="{{ g.delHover }}">×</button>
+            </span>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ gfAllDone }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:12px;border:1px dashed color-mix(in oklab, var(--ok) 45%, var(--line));border-radius:9px;font-size:12.5px;line-height:1.45;color:var(--ok);font-weight:600;margin-top:10px">All gifts assigned — nothing left to keep in your head.</div>
+      </sc-if>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <input value="{{ gfNew }}" onChange="{{ onGfNew }}" onKeyDown="{{ onGfKey }}" placeholder="New gift…" style="flex:1;min-width:0;padding:8px 11px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-size:12.5px;outline:none" style-focus="border-color:var(--mut)">
+        <input value="{{ gfNewQ }}" onChange="{{ onGfNewQ }}" onKeyDown="{{ onGfKey }}" inputMode="numeric" title="How many copies" style="width:46px;flex:none;padding:8px 6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-family:'IBM Plex Mono',monospace;font-size:12.5px;text-align:center;outline:none" style-focus="border-color:var(--mut)">
+        <button onClick="{{ onGfAdd }}" style="padding:8px 13px;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font-size:12.5px;font-weight:600" style-hover="filter:brightness(1.1)">Add</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;align-items:start">
+      <sc-for list="{{ gfFriends }}" as="f" hint-placeholder-count="3">
+        <div onClick="{{ f.onAssign }}" onDragOver="{{ f.onDragOver }}" onDragLeave="{{ f.onDragLeave }}" onDrop="{{ f.onDrop }}" style="{{ f.style }}" style-hover="{{ f.hoverS }}">
+          <div style="display:flex;align-items:center;gap:8px">
+            <input value="{{ f.name }}" onChange="{{ f.onName }}" onClick="{{ f.stop }}" style="flex:1;min-width:0;background:none;border:none;outline:none;font-size:13.5px;font-weight:600;padding:2px 4px" style-focus="background:var(--head);border-radius:5px">
+            <span style="flex:none;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:var(--mut);background:var(--head);border-radius:999px;padding:2px 8px">{{ f.count }}</span>
+            <button onClick="{{ f.onDel }}" title="Remove friend" style="flex:none;width:18px;height:18px;border:none;border-radius:5px;background:none;cursor:pointer;font-size:11px;line-height:1;color:var(--mut);padding:0" style-hover="background:var(--line2)">×</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
+            <sc-for list="{{ f.gifts }}" as="g"><span draggable="{{ true }}" onDragStart="{{ g.onDragStart }}" onDragEnd="{{ g.onDragEnd }}" style="display:flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--head);font-size:12.5px;font-weight:500;cursor:grab;user-select:none" style-hover="border-color:var(--accent)"><span style="{{ g.dotStyle }}"></span><span style="flex:1;min-width:0">{{ g.name }}</span><button onClick="{{ g.onRemove }}" title="Take back" style="flex:none;width:16px;height:16px;border:none;border-radius:5px;background:none;cursor:pointer;font-size:10.5px;line-height:1;color:var(--mut);padding:0" style-hover="background:var(--line2)">×</button></span></sc-for>
+          </div>
+          <div style="margin-top:8px;font-size:11.5px;color:var(--mut)">{{ f.hint }}</div>
+        </div>
+      </sc-for>
+      <button onClick="{{ onGfAddFriend }}" style="min-height:110px;border:1px dashed var(--line);border-radius:12px;background:none;cursor:pointer;font-size:12.5px;font-weight:500;color:var(--mut)" style-hover="border-color:var(--accent);color:var(--accent)">+ Add friend</button>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isResults }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Results — solve output" style="max-width:1180px;margin:0 auto;padding:28px 24px 72px">
+  <div style="font-size:12px;color:var(--mut)"><a onClick="{{ goHome }}" style="cursor:pointer" style-hover="color:var(--ink)">Problems</a> / Transportation / <span style="color:var(--ink)">Results</span></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:4px;flex-wrap:wrap">
+    <h1 style="margin:0;font-size:21px;font-weight:600;letter-spacing:-0.01em">{{ title }}</h1>
+    <span style="flex:none;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:4px 9px;border-radius:6px;background:var(--ok);color:#fff">✓ EXACT OPTIMUM</span>
+    <span style="font-size:12px;color:var(--mut)">MODI · from North-West Corner · 2 iterations</span>
+    <div style="flex:1"></div>
+    <button onClick="{{ onEditData }}" style="padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500" style-hover="border-color:var(--mut)">Edit data</button>
+    <button onClick="{{ onSaveModel }}" style="padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500" style-hover="border-color:var(--mut)">Save</button>
+  </div>
+  <div style="display:flex;align-items:baseline;gap:12px;margin-top:14px">
+    <span style="flex:none;white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--mut)">min Z =</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:42px;font-weight:600;letter-spacing:-0.02em;line-height:1;color:var(--accent)">2,850</span>
+    <span style="font-size:12.5px;color:var(--mut)">total shipping cost — down from 4,400 at the initial solution</span>
+  </div>
+  <div style="display:flex;border-bottom:1px solid var(--line);margin-top:20px">
+    <button onClick="{{ onTabA }}" style="position:relative;padding:10px 2px;margin-right:24px;background:none;border:none;cursor:pointer;font-size:13.5px;font-weight:500;color:{{ tabAC }}"><span>Answer</span><span style="position:absolute;left:0;right:0;bottom:-1px;height:2px;background:{{ tabAB }}"></span></button>
+    <button onClick="{{ onTabS }}" style="position:relative;padding:10px 2px;margin-right:24px;background:none;border:none;cursor:pointer;font-size:13.5px;font-weight:500;color:{{ tabSC }}"><span>Steps</span><span style="position:absolute;left:0;right:0;bottom:-1px;height:2px;background:{{ tabSB }}"></span></button>
+    <button onClick="{{ onTabI }}" style="position:relative;padding:10px 2px;background:none;border:none;cursor:pointer;font-size:13.5px;font-weight:500;color:{{ tabIC }}"><span>Insight</span><span style="position:absolute;left:0;right:0;bottom:-1px;height:2px;background:{{ tabIB }}"></span></button>
+  </div>
+
+  <sc-if value="{{ isTabS }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:300px 1fr;gap:22px;margin-top:20px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut)">INITIAL SOLUTION</span>
+          <select value="{{ method }}" onChange="{{ onMethod }}" style="flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--surface);font-size:12px;font-weight:500;outline:none;cursor:pointer">
+            <option value="nw">North-West Corner</option>
+            <option value="vam">Vogel approximation (VAM)</option>
+            <option value="lc">Least Cost</option>
+          </select>
+        </div>
+        <sc-for list="{{ timeline }}" as="s" hint-placeholder-count="4">
+          <div onClick="{{ s.on }}" style="{{ s.style }}">
+            <div style="display:flex;align-items:center;gap:11px">
+              <span style="{{ s.numStyle }}">{{ s.num }}</span>
+              <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">{{ s.label }}</div><div style="font-size:11.5px;color:var(--mut)">{{ s.sub }}</div></div>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--mut)">{{ s.zt }}</span>
+            </div>
+          </div>
+        </sc-for>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          <button onClick="{{ onPrev }}" style="width:30px;height:28px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:pointer;font-size:13px;color:var(--mut)" style-hover="border-color:var(--mut)">‹</button>
+          <button onClick="{{ onNext }}" style="width:30px;height:28px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:pointer;font-size:13px;color:var(--mut)" style-hover="border-color:var(--mut)">›</button>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--mut)">{{ stepPos }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut);margin-left:auto">← → to scrub</span>
+        </div>
+      </div>
+
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;min-width:0">
+        <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+          <h3 style="margin:0;font-size:15px;font-weight:600;flex:1;min-width:220px">{{ panelTitle }}</h3>
+          <sc-for list="{{ metaChips }}" as="m" hint-placeholder-count="3"><span style="flex:none;white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:3px 8px;border:1px solid var(--line);border-radius:6px;color:var(--ink)">{{ m.t }}</span></sc-for>
+        </div>
+        <p style="margin:8px 0 18px;font-size:13px;line-height:1.55;color:var(--mut);max-width:620px;text-wrap:pretty">{{ panelNote }}</p>
+        <div style="overflow-x:auto">
+          <div style="position:relative;width:558px">
+            <div style="display:flex">
+              <div style="width:120px;height:36px;display:flex;align-items:center;padding-left:10px;box-sizing:border-box;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut)">cost / route</div>
+              <div style="width:96px;height:36px;display:flex;align-items:baseline;justify-content:center;gap:5px;padding-top:8px;box-sizing:border-box"><span style="font-size:12px;font-weight:600">Boston</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut)">250</span></div>
+              <div style="width:96px;height:36px;display:flex;align-items:baseline;justify-content:center;gap:5px;padding-top:8px;box-sizing:border-box"><span style="font-size:12px;font-weight:600">Newark</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut)">350</span></div>
+              <div style="width:96px;height:36px;display:flex;align-items:baseline;justify-content:center;gap:5px;padding-top:8px;box-sizing:border-box"><span style="font-size:12px;font-weight:600">Miami</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut)">400</span></div>
+              <div style="width:96px;height:36px;display:flex;align-items:baseline;justify-content:center;gap:5px;padding-top:8px;box-sizing:border-box"><span style="font-size:12px;font-weight:600">Austin</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut)">200</span></div>
+              <div style="width:54px;height:36px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;font-style:italic;color:var(--mut)">{{ uHead }}</div>
+            </div>
+            <sc-for list="{{ mRows }}" as="r" hint-placeholder-count="3">
+              <div style="display:flex">
+                <div style="width:120px;height:64px;display:flex;flex-direction:column;justify-content:center;padding-left:10px;box-sizing:border-box"><span style="font-size:12.5px;font-weight:600">{{ r.name }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut)">{{ r.sup }}</span></div>
+                <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="4">
+                  <div style="{{ c.style }}">
+                    <span style="position:absolute;top:5px;right:7px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut)">{{ c.cost }}</span>
+                    <span style="{{ c.allocStyle }}">{{ c.allocTxt }}</span>
+                    <span style="{{ c.deltaStyle }}">{{ c.deltaTxt }}</span>
+                  </div>
+                </sc-for>
+                <div style="width:54px;height:64px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--mut)">{{ r.u }}</div>
+              </div>
+            </sc-for>
+            <div style="display:flex">
+              <div style="width:120px;height:30px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;box-sizing:border-box;font-family:'IBM Plex Mono',monospace;font-size:11px;font-style:italic;color:var(--mut)">{{ vHead }}</div>
+              <sc-for list="{{ vCells }}" as="v" hint-placeholder-count="4"><div style="width:96px;height:30px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--mut)">{{ v.t }}</div></sc-for>
+            </div>
+            <svg width="558" height="258" style="position:absolute;left:0;top:0;pointer-events:none">{{ loopEls }}</svg>
+          </div>
+        </div>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:16px;font-size:11.5px;color:var(--mut)">
+          <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:color-mix(in oklab, var(--ink) 8%, var(--surface));box-shadow:inset 0 0 0 1px var(--line)"></span>allocated units</span>
+          <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;box-shadow:inset 0 0 0 2px var(--accent)"></span>entering cell</span>
+          <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:16px;border-top:2px dashed var(--accent)"></span>closed loop — θ shifts around it</span>
+          <span style="display:inline-flex;align-items:center;gap:6px"><span style="font-family:'IBM Plex Mono',monospace;font-size:11px">Δ</span>cost change per unit if an empty route enters</span>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isTabA }}" hint-placeholder-val="{{ false }}">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(480px,1fr));gap:22px;margin-top:20px;align-items:start">
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut)">ALLOCATION</div>
+        <div style="overflow-x:auto;margin-top:12px">
+          <div style="width:504px">
+            <div style="display:flex">
+              <div style="width:120px;height:36px"></div>
+              <div style="width:96px;height:36px;display:flex;align-items:baseline;justify-content:center;gap:5px"><span style="font-size:12px;font-weight:600">Boston</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut)">250</span></div>
+              <div style="width:96px;height:36px;display:flex;align-items:baseline;justify-content:center;gap:5px"><span style="font-size:12px;font-weight:600">Newark</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut)">350</span></div>
+              <div style="width:96px;height:36px;display:flex;align-items:baseline;justify-content:center;gap:5px"><span style="font-size:12px;font-weight:600">Miami</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut)">400</span></div>
+              <div style="width:96px;height:36px;display:flex;align-items:baseline;justify-content:center;gap:5px"><span style="font-size:12px;font-weight:600">Austin</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut)">200</span></div>
+            </div>
+            <sc-for list="{{ aRows }}" as="r" hint-placeholder-count="3">
+              <div style="display:flex">
+                <div style="width:120px;height:64px;display:flex;flex-direction:column;justify-content:center;padding-left:10px;box-sizing:border-box"><span style="font-size:12.5px;font-weight:600">{{ r.name }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut)">{{ r.sup }}</span></div>
+                <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="4">
+                  <div onMouseEnter="{{ c.onEnter }}" onMouseLeave="{{ c.onLeave }}" style="{{ c.style }}">
+                    <span style="position:absolute;top:5px;right:7px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut)">{{ c.cost }}</span>
+                    <span style="{{ c.allocStyle }}">{{ c.allocTxt }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="margin-top:14px;font-size:11.5px;color:var(--mut)">6 of 12 routes used · every supply and demand met exactly · hover a cell to trace it in the diagram</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut)">FLOW DIAGRAM</div>
+        <svg width="470" height="356" style="max-width:100%;margin-top:6px">{{ flowEls }}</svg>
+        <div style="font-size:11.5px;color:var(--mut)">Edge width ∝ units shipped · hover a route to trace it in the matrix</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isTabI }}" hint-placeholder-val="{{ false }}">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:22px;margin-top:20px;align-items:start">
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px">
+        <div style="display:flex;align-items:center;gap:10px"><svg width="26" height="26" viewBox="0 0 26 26" style="flex:none"><rect x="3" y="3" width="20" height="20" rx="5" fill="color-mix(in oklab, var(--blue) 12%, var(--surface))"></rect><path d="M8 17 L13 9 L18 17" stroke="var(--blue)" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="13" cy="9" r="1.8" fill="var(--blue)"></circle></svg><h3 style="margin:0;font-size:14px;font-weight:600">Shadow prices</h3></div>
+        <p style="margin:6px 0 14px;font-size:12.5px;line-height:1.5;color:var(--mut);text-wrap:pretty">What one extra unit of supply or demand would do to total cost, relative to Denver (u = 0).</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut);margin-bottom:6px">WAREHOUSES uᵢ</div>
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid var(--line2);font-size:12.5px"><span>Denver</span><span style="font-family:'IBM Plex Mono',monospace">0</span></div>
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid var(--line2);font-size:12.5px"><span>Chicago</span><span style="font-family:'IBM Plex Mono',monospace">4</span></div>
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid var(--line2);font-size:12.5px"><span>Atlanta</span><span style="font-family:'IBM Plex Mono',monospace">2</span></div>
+          </div>
+          <div>
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut);margin-bottom:6px">SHOPS vⱼ</div>
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid var(--line2);font-size:12.5px"><span>Boston</span><span style="font-family:'IBM Plex Mono',monospace">−2</span></div>
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid var(--line2);font-size:12.5px"><span>Newark</span><span style="font-family:'IBM Plex Mono',monospace">1</span></div>
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid var(--line2);font-size:12.5px"><span>Miami</span><span style="font-family:'IBM Plex Mono',monospace">1</span></div>
+            <div style="display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid var(--line2);font-size:12.5px"><span>Austin</span><span style="font-family:'IBM Plex Mono',monospace">0</span></div>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px">
+        <div style="display:flex;align-items:center;gap:10px"><svg width="26" height="26" viewBox="0 0 26 26" style="flex:none"><rect x="3" y="3" width="20" height="20" rx="5" fill="color-mix(in oklab, var(--teal) 12%, var(--surface))"></rect><path d="M7 9 L19 9 M7 13 L15 13 M7 17 L12 17" stroke="var(--teal)" stroke-width="1.6" fill="none" stroke-linecap="round"></path></svg><h3 style="margin:0;font-size:14px;font-weight:600">Unused routes — reduced costs</h3></div>
+        <p style="margin:6px 0 14px;font-size:12.5px;line-height:1.5;color:var(--mut);text-wrap:pretty">How much each unused route's cost must fall before it would enter the plan.</p>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid var(--line2);font-size:12.5px"><span style="flex:none;white-space:nowrap;font-weight:600">Chicago → Newark</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:600">+1</span></div>
+        <div style="font-size:11.5px;color:var(--mut);padding-bottom:6px">Closest to entering — watch this rate.</div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line2);font-size:12.5px"><span style="flex:none;white-space:nowrap">Denver → Austin</span><span style="font-family:'IBM Plex Mono',monospace">+4</span></div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line2);font-size:12.5px"><span style="flex:none;white-space:nowrap">Denver → Boston</span><span style="font-family:'IBM Plex Mono',monospace">+5</span></div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line2);font-size:12.5px"><span style="flex:none;white-space:nowrap">Chicago → Austin</span><span style="font-family:'IBM Plex Mono',monospace">+5</span></div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line2);font-size:12.5px"><span style="flex:none;white-space:nowrap">Denver → Miami</span><span style="font-family:'IBM Plex Mono',monospace">+6</span></div>
+        <div style="display:flex;justify-content:space-between;padding:6px 0;border-top:1px solid var(--line2);font-size:12.5px"><span style="flex:none;white-space:nowrap">Atlanta → Boston</span><span style="font-family:'IBM Plex Mono',monospace">+8</span></div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px">
+        <div style="display:flex;align-items:center;gap:10px"><svg width="26" height="26" viewBox="0 0 26 26" style="flex:none"><rect x="3" y="3" width="20" height="20" rx="5" fill="color-mix(in oklab, var(--purple) 12%, var(--surface))"></rect><path d="M7 16 C10 16 10 10 13 10 C16 10 16 16 19 16" stroke="var(--purple)" stroke-width="1.6" fill="none" stroke-linecap="round"></path><path d="M13 6 L13 20" stroke="var(--purple)" stroke-width="1.2" stroke-dasharray="2.5 2.5"></path></svg><h3 style="margin:0;font-size:14px;font-weight:600">How stable is this answer?</h3></div>
+        <p style="margin:6px 0 12px;font-size:12.5px;line-height:1.5;color:var(--mut);text-wrap:pretty">Ranges the plan survives — beyond them a different allocation becomes optimal.</p>
+        <div style="padding:8px 0;border-top:1px solid var(--line2);font-size:12.5px;line-height:1.5">Denver → Newark rate can rise from <span style="font-family:'IBM Plex Mono',monospace">1</span> to <span style="font-family:'IBM Plex Mono',monospace">5</span> before the plan changes (Denver → Austin would enter).</div>
+        <div style="padding:8px 0;border-top:1px solid var(--line2);font-size:12.5px;line-height:1.5">Chicago → Boston is safe up to <span style="font-family:'IBM Plex Mono',monospace">7</span> (from <span style="font-family:'IBM Plex Mono',monospace">2</span>).</div>
+        <div style="padding:8px 0;border-top:1px solid var(--line2);font-size:12.5px;line-height:1.5">All 7 supply and demand constraints are binding — the problem is balanced, so there is no slack anywhere.</div>
+        <div style="padding:8px 0;border-top:1px solid var(--line2);font-size:12.5px;line-height:1.5">The optimum is unique: no empty route prices at exactly Δ = 0.</div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isResultsG }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Results — graph solve" style="max-width:1180px;margin:0 auto;padding:28px 24px 72px">
+  <div style="font-size:12px;color:var(--mut)"><a onClick="{{ goHome }}" style="cursor:pointer" style-hover="color:var(--ink)">Problems</a> / {{ modelName }} / <span style="color:var(--ink)">Results</span></div>
+  <div style="display:flex;align-items:center;gap:12px;margin-top:4px;flex-wrap:wrap">
+    <h1 style="margin:0;font-size:21px;font-weight:600;letter-spacing:-0.01em">{{ title }}</h1>
+    <span style="{{ grBadgeS }}">{{ grBadgeT }}</span>
+    <span style="font-size:12px;color:var(--mut)">{{ grMethod }}</span>
+    <div style="flex:1"></div>
+    <button onClick="{{ onEditG }}" style="padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500" style-hover="border-color:var(--mut)">Edit data</button>
+    <button onClick="{{ onSaveModel }}" style="padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500" style-hover="border-color:var(--mut)">Save</button>
+  </div>
+  <div style="display:flex;align-items:baseline;gap:12px;margin-top:14px">
+    <span style="flex:none;white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--mut)">{{ grObjPre }}</span>
+    <span style="font-family:'IBM Plex Mono',monospace;font-size:42px;font-weight:600;letter-spacing:-0.02em;line-height:1;color:var(--accent)">{{ grObjVal }}</span>
+    <span style="font-size:12.5px;color:var(--mut)">{{ grObjNote }}</span>
+  </div>
+  <div style="display:flex;border-bottom:1px solid var(--line);margin-top:20px">
+    <button onClick="{{ onTabA }}" style="position:relative;padding:10px 2px;margin-right:24px;background:none;border:none;cursor:pointer;font-size:13.5px;font-weight:500;color:{{ tabAC }}"><span>Answer</span><span style="position:absolute;left:0;right:0;bottom:-1px;height:2px;background:{{ tabAB }}"></span></button>
+    <button onClick="{{ onTabS }}" style="position:relative;padding:10px 2px;margin-right:24px;background:none;border:none;cursor:pointer;font-size:13.5px;font-weight:500;color:{{ tabSC }}"><span>Steps</span><span style="position:absolute;left:0;right:0;bottom:-1px;height:2px;background:{{ tabSB }}"></span></button>
+    <button onClick="{{ onTabI }}" style="position:relative;padding:10px 2px;background:none;border:none;cursor:pointer;font-size:13.5px;font-weight:500;color:{{ tabIC }}"><span>Insight</span><span style="position:absolute;left:0;right:0;bottom:-1px;height:2px;background:{{ tabIB }}"></span></button>
+  </div>
+
+  <sc-if value="{{ isTabS }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:300px 1fr;gap:22px;margin-top:20px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut);margin-bottom:2px;padding-top:6px">SOLVER LOG</div>
+        <sc-for list="{{ gTimeline }}" as="s" hint-placeholder-count="4">
+          <div onClick="{{ s.on }}" style="{{ s.style }}">
+            <div style="display:flex;align-items:center;gap:11px">
+              <span style="{{ s.numStyle }}">{{ s.num }}</span>
+              <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600">{{ s.label }}</div><div style="font-size:11.5px;color:var(--mut)">{{ s.sub }}</div></div>
+              <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--mut)">{{ s.zt }}</span>
+            </div>
+          </div>
+        </sc-for>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          <button onClick="{{ onPrev }}" style="width:30px;height:28px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:pointer;font-size:13px;color:var(--mut)" style-hover="border-color:var(--mut)">‹</button>
+          <button onClick="{{ onNext }}" style="width:30px;height:28px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:pointer;font-size:13px;color:var(--mut)" style-hover="border-color:var(--mut)">›</button>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--mut)">{{ stepPos }}</span>
+          <span style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--mut);margin-left:auto">← → to scrub</span>
+        </div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;min-width:0">
+        <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+          <h3 style="margin:0;font-size:15px;font-weight:600;flex:1;min-width:220px">{{ grPanelTitle }}</h3>
+          <sc-for list="{{ grChips }}" as="m" hint-placeholder-count="3"><span style="flex:none;white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:11px;padding:3px 8px;border:1px solid var(--line);border-radius:6px;color:var(--ink)">{{ m.t }}</span></sc-for>
+        </div>
+        <p style="margin:8px 0 16px;font-size:13px;line-height:1.55;color:var(--mut);max-width:640px;text-wrap:pretty">{{ grNote }}</p>
+        <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start">
+          <svg width="560" height="300" viewBox="0 0 560 300" style="flex:none;max-width:100%">{{ grStepEls }}</svg>
+          <div style="flex:1;min-width:250px;max-width:400px">
+            <div style="display:flex;gap:10px;padding-bottom:7px">
+              <sc-for list="{{ grTHead }}" as="hc" hint-placeholder-count="3"><span style="{{ hc.style }}">{{ hc.t }}</span></sc-for>
+            </div>
+            <sc-for list="{{ grTRows }}" as="r" hint-placeholder-count="5">
+              <div style="display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line2)">
+                <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="3"><span style="{{ c.style }}">{{ c.t }}</span></sc-for>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:11.5px;color:var(--mut)">
+          <sc-for list="{{ grLegend }}" as="lg" hint-placeholder-count="3"><span style="display:inline-flex;align-items:center;gap:6px"><span style="{{ lg.sw }}"></span>{{ lg.t }}</span></sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isTabA }}" hint-placeholder-val="{{ false }}">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(480px,1fr));gap:22px;margin-top:20px;align-items:start">
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut)">NETWORK</div>
+        <svg width="560" height="300" viewBox="0 0 560 300" style="max-width:100%;height:auto;margin-top:10px">{{ grAnsEls }}</svg>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut)">{{ grAnsHead }}</div>
+        <div style="margin-top:12px;max-width:440px">
+          <div style="display:flex;gap:10px;padding-bottom:7px">
+            <sc-for list="{{ grAnsTHead }}" as="hc" hint-placeholder-count="3"><span style="{{ hc.style }}">{{ hc.t }}</span></sc-for>
+          </div>
+          <sc-for list="{{ grAnsRows }}" as="r" hint-placeholder-count="4">
+            <div style="display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line2)">
+              <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="3"><span style="{{ c.style }}">{{ c.t }}</span></sc-for>
+            </div>
+          </sc-for>
+        </div>
+        <p style="margin:14px 0 0;font-size:12.5px;line-height:1.5;color:var(--mut);text-wrap:pretty">{{ grAnsNote }}</p>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isTabI }}" hint-placeholder-val="{{ false }}">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:22px;margin-top:20px;align-items:start">
+      <sc-for list="{{ grInsight }}" as="i" hint-placeholder-count="3">
+        <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px">
+          <h3 style="margin:0;font-size:14px;font-weight:600">{{ i.t }}</h3>
+          <p style="margin:6px 0 10px;font-size:12.5px;line-height:1.5;color:var(--mut);text-wrap:pretty">{{ i.p }}</p>
+          <sc-for list="{{ i.rows }}" as="rw" hint-placeholder-count="3">
+            <div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-top:1px solid var(--line2);font-size:12.5px"><span style="min-width:0">{{ rw.l }}</span><span style="flex:none;font-family:'IBM Plex Mono',monospace;font-weight:600">{{ rw.v }}</span></div>
+          </sc-for>
+          <p style="margin:10px 0 0;font-size:11.5px;line-height:1.5;color:var(--mut);text-wrap:pretty">{{ i.foot }}</p>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSaved }}" hint-placeholder-val="{{ false }}">
+<div data-screen-label="Saved problems" style="max-width:960px;margin:0 auto;padding:44px 24px 72px">
+  <h1 style="margin:0;font-size:27px;font-weight:600;letter-spacing:-0.015em">Saved problems</h1>
+  <p style="margin:8px 0 22px;font-size:14px;color:var(--mut)">Your past models — click one to reopen its solution.</p>
+  <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden">
+    <div style="display:grid;grid-template-columns:1.5fr 1.1fr 0.7fr 0.8fr 1.5fr 0.7fr;gap:12px;padding:10px 18px;background:var(--head);border-bottom:1px solid var(--line);font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut)">
+      <span>NAME</span><span>MODEL</span><span>SIZE</span><span style="text-align:right">OBJECTIVE</span><span>METHOD</span><span style="text-align:right">UPDATED</span>
+    </div>
+    <div onClick="{{ goResults }}" style="display:grid;grid-template-columns:1.5fr 1.1fr 0.7fr 0.8fr 1.5fr 0.7fr;gap:12px;padding:13px 18px;align-items:center;cursor:pointer;font-size:12.5px" style-hover="background:var(--head)">
+      <span style="font-weight:600;display:flex;align-items:center;gap:9px;min-width:0"><svg width="24" height="18" viewBox="0 0 24 18" style="flex:none"><path d="M5 5 L19 9 M5 13 L19 5 M5 13 L19 13" stroke="var(--blue)" stroke-width="1.2" fill="none"></path><g fill="var(--blue)"><circle cx="4" cy="5" r="2"></circle><circle cx="4" cy="13" r="2"></circle><circle cx="20" cy="5" r="2"></circle><circle cx="20" cy="9" r="2"></circle><circle cx="20" cy="13" r="2"></circle></g></svg><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Denver network</span></span><span style="color:var(--mut)">Transportation</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--mut)">3×4</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right">2,850</span><span style="min-width:0"><span style="display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-sizing:border-box;font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:2.5px 7px;border-radius:5px;background:color-mix(in oklab, var(--ok) 14%, var(--surface));color:var(--ok);border:1px solid color-mix(in oklab, var(--ok) 35%, var(--line))">EXACT · MODI</span></span><span style="color:var(--mut);text-align:right">2 h ago</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1.5fr 1.1fr 0.7fr 0.8fr 1.5fr 0.7fr;gap:12px;padding:13px 18px;align-items:center;border-top:1px solid var(--line2);font-size:12.5px" style-hover="background:var(--head)">
+      <span style="font-weight:600;display:flex;align-items:center;gap:9px;min-width:0"><svg width="24" height="18" viewBox="0 0 24 18" style="flex:none"><path d="M5 4 L19 9 M5 9 L19 4 M5 14 L19 14" stroke="var(--blue)" stroke-width="1.2" fill="none"></path><g fill="var(--blue)"><circle cx="4" cy="4" r="2"></circle><circle cx="4" cy="9" r="2"></circle><circle cx="4" cy="14" r="2"></circle><circle cx="20" cy="4" r="2"></circle><circle cx="20" cy="9" r="2"></circle><circle cx="20" cy="14" r="2"></circle></g></svg><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Crew rota — March</span></span><span style="color:var(--mut)">Assignment</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--mut)">6×6</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right">41.0 h</span><span style="min-width:0"><span style="display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-sizing:border-box;font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:2.5px 7px;border-radius:5px;background:color-mix(in oklab, var(--ok) 14%, var(--surface));color:var(--ok);border:1px solid color-mix(in oklab, var(--ok) 35%, var(--line))">EXACT · HUNGARIAN</span></span><span style="color:var(--mut);text-align:right">yesterday</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1.5fr 1.1fr 0.7fr 0.8fr 1.5fr 0.7fr;gap:12px;padding:13px 18px;align-items:center;border-top:1px solid var(--line2);font-size:12.5px" style-hover="background:var(--head)">
+      <span style="font-weight:600;display:flex;align-items:center;gap:9px;min-width:0"><svg width="24" height="18" viewBox="0 0 24 18" style="flex:none"><g stroke="var(--teal)" stroke-width="1.2" fill="none"><rect x="3" y="3" width="5" height="12"></rect><rect x="10" y="3" width="5" height="12"></rect><rect x="17" y="3" width="5" height="12"></rect></g><g fill="var(--teal)"><rect x="3" y="9" width="5" height="6"></rect><rect x="10" y="7" width="5" height="8"></rect><rect x="17" y="11" width="5" height="4"></rect></g></svg><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Pallet loading</span></span><span style="color:var(--mut)">Bin packing</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--mut)">48 items</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right">11 bins</span><span style="min-width:0"><span style="display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-sizing:border-box;font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:2.5px 7px;border-radius:5px;background:color-mix(in oklab, var(--warn) 10%, var(--surface));color:var(--warn);border:1px solid color-mix(in oklab, var(--warn) 35%, var(--line))">HEURISTIC · FFD · LB 10</span></span><span style="color:var(--mut);text-align:right">3 d ago</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1.5fr 1.1fr 0.7fr 0.8fr 1.5fr 0.7fr;gap:12px;padding:13px 18px;align-items:center;border-top:1px solid var(--line2);font-size:12.5px" style-hover="background:var(--head)">
+      <span style="font-weight:600;display:flex;align-items:center;gap:9px;min-width:0"><svg width="24" height="18" viewBox="0 0 24 18" style="flex:none"><path d="M4 9 L9 3 L19 5 L21 12 L12 15 Z" stroke="var(--rose)" stroke-width="1.3" fill="none"></path><g fill="var(--rose)"><circle cx="4" cy="9" r="2"></circle><circle cx="9" cy="3" r="2"></circle><circle cx="19" cy="5" r="2"></circle><circle cx="21" cy="12" r="2"></circle><circle cx="12" cy="15" r="2"></circle></g></svg><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Sales loop — Q3</span></span><span style="color:var(--mut)">Travelling salesman</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--mut)">12 stops</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right">342 km</span><span style="min-width:0"><span style="display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-sizing:border-box;font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:2.5px 7px;border-radius:5px;background:color-mix(in oklab, var(--warn) 10%, var(--surface));color:var(--warn);border:1px solid color-mix(in oklab, var(--warn) 35%, var(--line))">HEURISTIC · 2-OPT · ≤3%</span></span><span style="color:var(--mut);text-align:right">2 w ago</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1.5fr 1.1fr 0.7fr 0.8fr 1.5fr 0.7fr;gap:12px;padding:13px 18px;align-items:center;border-top:1px solid var(--line2);font-size:12.5px" style-hover="background:var(--head)">
+      <span style="font-weight:600;display:flex;align-items:center;gap:9px;min-width:0"><svg width="24" height="18" viewBox="0 0 24 18" style="flex:none"><path d="M4 13 L13 11 M8 4 L13 11" stroke="var(--line)" stroke-width="1.1" fill="none"></path><path d="M4 13 L8 4 L20 6" stroke="var(--blue)" stroke-width="1.4" fill="none"></path><g fill="var(--blue)"><circle cx="4" cy="13" r="2"></circle><circle cx="8" cy="4" r="2"></circle><circle cx="13" cy="11" r="2"></circle><circle cx="20" cy="6" r="2"></circle></g></svg><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Campus shuttle</span></span><span style="color:var(--mut)">Shortest path</span><span style="font-family:'IBM Plex Mono',monospace;color:var(--mut)">24 nodes</span><span style="font-family:'IBM Plex Mono',monospace;font-weight:600;text-align:right">17.4 km</span><span style="min-width:0"><span style="display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-sizing:border-box;font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:2.5px 7px;border-radius:5px;background:color-mix(in oklab, var(--ok) 14%, var(--surface));color:var(--ok);border:1px solid color-mix(in oklab, var(--ok) 35%, var(--line))">EXACT · DIJKSTRA</span></span><span style="color:var(--mut);text-align:right">3 w ago</span>
+    </div>
+  </div>
+</div>
+</sc-if>
+</div>
+
+<template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#1c1917"></rect><text x="50" y="62" text-anchor="middle" font-family="Georgia,serif" font-size="34" fill="#e7e5e4">🎁</text></svg></template></x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;\&quot;light\&quot; | \&quot;dark\&quot;&quot;,&quot;section&quot;:&quot;Appearance&quot;},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;options&quot;:[&quot;#d9480f&quot;,&quot;#0f766e&quot;,&quot;#4263eb&quot;,&quot;#c2255c&quot;],&quot;default&quot;:&quot;#d9480f&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Appearance&quot;},&quot;showDeltas&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Results&quot;}}">
+class Component extends DCLogic {
+  rootRef = React.createRef();
+  SUPA_URL='https://wylxvmkcrexwfpjpbhyy.supabase.co';
+  SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5bHh2bWtjcmV4d2ZwanBiaHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2MzkxMDYsImV4cCI6MjA4NDIxNTEwNn0.6Bxo42hx4jwlJGWnfjiTpiDUsYfc1QLTN3YtrU1efak';
+  loadData(){if(!this._dp)this._dp=Promise.all([import('./problems/transportation/data.js'),import('./problems/graphs/data.js'),import('./problems/assignment/data.js'),import('./problems/lists/data.js'),import('./problems/matching/data.js'),import('./problems/gifts/data.js')]).then(([t,g,a,l,p,gf])=>{this.EX=t.EX;this.FINAL=t.FINAL;this.STEPS=t.STEPS;this.GN=g.GN;this.GEC=g.GEC;this.GR=g.GR;this.graphSample=g.graphSample;this.asgSample=a.asgSample;this.listSample=l.listSample;this.prefSample=p.prefSample;this.giftSample=gf.giftSample;this.forceUpdate();});return this._dp;}
+  state = {screen:'home',model:'transportation',asg:null,list:null,graph:null,pref:null,themeO:null,tab:'steps',step:1,mode:'matrix',hover:null,wiz:null,wizOpen:false,pasteOpen:false,pasteTxt:'',title:'Denver network',method:'nw',
+    src:['Denver','Chicago','Atlanta'],dst:['Boston','Newark','Miami','Austin'],costs:[[3,1,7,4],[2,6,5,9],[8,3,3,2]],supply:[300,400,500],demand:[250,350,400,200]};
+
+  componentDidMount(){this.loadData();this.applyAccent();this.kd=(e)=>{if(this.state.screen!=='results'||this.state.tab!=='steps')return;const nS=this.MODELS[this.state.model].fam==='g'?this.GR[this.state.model].steps.length:this.STEPS.length;if(e.key==='ArrowRight'){e.preventDefault();this.setState(s=>({step:Math.min(nS-1,s.step+1)}));}if(e.key==='ArrowLeft'){e.preventDefault();this.setState(s=>({step:Math.max(0,s.step-1)}));}};window.addEventListener('keydown',this.kd);}
+  componentWillUnmount(){window.removeEventListener('keydown',this.kd);}
+  componentDidUpdate(){this.applyAccent();}
+  applyAccent(){const el=this.rootRef.current;if(!el)return;const a=this.props.accent;if(a&&a!=='#d9480f')el.style.setProperty('--accent',a);else el.style.removeProperty('--accent');}
+
+  updCost(r,c,v){const costs=this.state.costs.map(x=>x.slice());costs[r][c]=v===''?0:(+v||0);this.setSave({costs});}
+  updNum(key,i,v){const a=this.state[key].slice();a[i]=v===''?0:(+v||0);this.setSave({[key]:a});}
+  updName(key,i,v){const a=this.state[key].slice();a[i]=v;this.setSave({[key]:a});}
+  addDummy(){const s=this.state;const ts=s.supply.reduce((a,b)=>a+(+b||0),0),td=s.demand.reduce((a,b)=>a+(+b||0),0);if(ts===td)return;
+    if(ts>td)this.setSave({demand:[...s.demand,ts-td],dst:[...s.dst,'Dummy'],costs:s.costs.map(r=>[...r,0])});
+    else this.setSave({supply:[...s.supply,td-ts],src:[...s.src,'Dummy'],costs:[...s.costs,s.demand.map(()=>0)]});}
+  addSource(){const s=this.state;this.setSave({src:[...s.src,'Source '+(s.src.length+1)],supply:[...s.supply,0],costs:[...s.costs,s.dst.map(()=>0)]});}
+  addDest(){const s=this.state;this.setSave({dst:[...s.dst,'Dest '+(s.dst.length+1)],demand:[...s.demand,0],costs:s.costs.map(r=>[...r,0])});}
+  delSource(i){const s=this.state;if(s.src.length<=2)return;this.setSave({src:s.src.filter((_,j)=>j!==i),supply:s.supply.filter((_,j)=>j!==i),costs:s.costs.filter((_,j)=>j!==i)});}
+  delDest(i){const s=this.state;if(s.dst.length<=2)return;this.setSave({dst:s.dst.filter((_,j)=>j!==i),demand:s.demand.filter((_,j)=>j!==i),costs:s.costs.map(r=>r.filter((_,j)=>j!==i))});}
+  loadExample(){const E=this.EX;this.setState({src:[...E.src],dst:[...E.dst],costs:E.costs.map(r=>r.slice()),supply:[...E.supply],demand:[...E.demand],title:'Denver network',pasteOpen:false});}
+  applyPaste(){const rows=this.state.pasteTxt.trim().split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>l.split(/[\t;,]+|\s{2,}/).map(x=>+x||0));if(!rows.length||rows[0].length<2)return;
+    const nC=Math.max(...rows.map(r=>r.length));const costs=rows.map(r=>{const q=r.slice(0,nC);while(q.length<nC)q.push(0);return q;});
+    const pad=(arr,n,f)=>{const a=arr.slice(0,n);let i=a.length;while(a.length<n)a.push(f(i++));return a;};
+    this.setSave({costs,src:pad(this.state.src,rows.length,i=>'Source '+(i+1)),dst:pad(this.state.dst,nC,i=>'Dest '+(i+1)),supply:pad(this.state.supply,rows.length,()=>100),demand:pad(this.state.demand,nC,()=>100),pasteOpen:false,pasteTxt:''});}
+
+  MODELS={transportation:{name:'Transportation',fam:'t',title:'Denver network'},transshipment:{name:'Transshipment',fam:'t',title:'Depot routing'},assignment:{name:'Assignment',fam:'a',title:'Crew rota'},knapsack:{name:'Knapsack',fam:'l',title:'Trail pack'},setcovering:{name:'Set covering',fam:'l',title:'Clinic sites'},binpacking:{name:'Bin packing',fam:'l',title:'Pallet loading'},jobseq:{name:'Job sequencing',fam:'l',title:'Print queue'},shortestpath:{name:'Shortest path',fam:'g',title:'Campus shuttle'},maxflow:{name:'Maximum flow',fam:'g',title:'Pipeline capacity'},mincostflow:{name:'Minimum cost flow',fam:'g',title:'Freight network'},tsp:{name:'Travelling salesman',fam:'g',title:'Sales loop'},vrp:{name:'Vehicle routing',fam:'g',title:'Delivery fleet'},stable:{name:'Stable matching',fam:'p',title:'Residency match'},bipartite:{name:'Bipartite matching',fam:'p',title:'Shift cover'},gifts:{name:'Gift assignment',fam:'gf',title:'My gift list'}};
+  async openModel(id,fresh){await this.loadData();const M=this.MODELS[id];const p={screen:'editor',model:id,title:M.title,pasteOpen:false,mode:'matrix'};
+    if(M.fam==='t'){const E=this.EX;Object.assign(p,{src:[...E.src],dst:[...E.dst],costs:E.costs.map(r=>r.slice()),supply:[...E.supply],demand:[...E.demand]});}
+    if(M.fam==='a')p.asg=this.asgSample();
+    if(M.fam==='l')p.list=this.listSample(id);
+    if(M.fam==='g')p.graph=this.graphSample(id);
+    if(M.fam==='p')p.pref=this.prefSample(id);
+    if(M.fam==='gf'){const sv=fresh?null:this.giftLoad();if(sv){p.gift=this.normGift({...sv,sel:null,drag:null,over:null,newG:'',newQ:1});if(sv.title)p.title=sv.title;}else p.gift=this.giftSample();if(fresh){this._giftSynced=true;this.giftSave(p.gift,p.title);}else{this._giftDirty=false;this._giftSynced=false;this._giftPend=false;this.supaLoad();}}
+    else{this._dirty=this._dirty||{};if(fresh){this._dirty[id]=true;this.setState(p);this.saveCur(p);return;}const sv2=this.loadLocalModel(id);if(sv2)this.applyRec(id,M.fam,sv2,p);this._dirty[id]=false;this.supaLoadModel(id,M.fam);}
+    this.setState(p);}
+  mutAsg(f){const a=this.state.asg;const n={rows:[...a.rows],cols:[...a.cols],costs:a.costs.map(r=>r.slice())};f(n);this.setState({asg:n});this.saveCur({asg:n});}
+  mutList(f){const l=this.state.list;const n={...l,items:l.items.map(it=>it.slice())};f(n);this.setState({list:n});this.saveCur({list:n});}
+  mutGraph(f){const g=this.state.graph;const n={...g,nodes:g.nodes.map(x=>({...x})),edges:g.edges.map(x=>({...x}))};f(n);this.setState({graph:n});this.saveCur({graph:n});}
+  normGift(g){if(!g)return null;let n=g;
+    if(!Array.isArray(n.occs)){let b=n;
+      if(!Array.isArray(b.given)){const gifts=[],given=[];(b.gifts||[]).forEach(x=>{gifts.push({n:x.n,q:Math.max(1,+x.q||1)});if(x.to!=null)given.push({g:gifts.length-1,to:x.to});});b={...b,gifts,given};}
+      n={...n,occs:[{name:'Birthday',gifts:b.gifts||[],friends:b.friends||[],given:b.given||[]}],oi:0};}
+    const oi=Math.max(0,Math.min(n.occs.length-1,n.oi||0)),cur=n.occs[oi]||{};
+    return{...n,oi,view:n.view==='board'?'board':'folders',gifts:cur.gifts||[],friends:cur.friends||[],given:cur.given||[],newQ:n.newQ==null?1:n.newQ,drag:n.drag==null?null:n.drag,over:n.over==null?null:n.over};}
+  gfSwitch(i){this.mutGift(n=>{n.oi=i;n.view='board';});}
+  gfBack(){this.mutGift(n=>{n.view='folders';n.sel=null;n.drag=null;n.over=null;});}
+  gfAddOcc(){this.mutGift(n=>{n._skip=true;n.occs[n.oi]={...n.occs[n.oi],gifts:n.gifts,friends:n.friends,given:n.given};n.occs.push({name:'New occasion',gifts:[],friends:[...(n.friends||[])],given:[]});n.oi=n.occs.length-1;n.view='board';});}
+  gfDelOcc(i){this.mutGift(n=>{if(n.occs.length<=1)return;n._skip=true;n.occs[n.oi]={...n.occs[n.oi],gifts:n.gifts,friends:n.friends,given:n.given};n.occs.splice(i,1);n.oi=n.oi>i?n.oi-1:(n.oi===i?Math.min(i,n.occs.length-1):n.oi);});}
+  giftSave(g,title){this._giftDirty=true;const q=this.normGift(g);const data={occs:q.occs,oi:q.oi,title:title||this.state.title};
+    try{localStorage.setItem('argmin-gift-v1',JSON.stringify(data));}catch(e){}
+    if(!this._giftSynced){this._giftPend=true;return;}
+    clearTimeout(this._supaT);this._supaT=setTimeout(()=>{fetch(this.SUPA_URL+'/rest/v1/argmin_boards',{method:'POST',headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id:'gifts',model:'gifts',family:'gf',data,updated_at:new Date().toISOString()})}).then(r=>{if(!r.ok)console.warn('argmin sync failed',r.status)}).catch(e=>console.warn('argmin sync failed',e));},600);}
+  async supaLoad(){let d=null;try{const r=await fetch(this.SUPA_URL+'/rest/v1/argmin_boards?id=eq.gifts&select=data',{headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY}});const rows=await r.json();d=rows&&rows[0]&&rows[0].data;}catch(e){}
+    this._giftSynced=true;
+    if(d&&(Array.isArray(d.occs)||Array.isArray(d.gifts))&&!this._giftDirty){this.setState({gift:this.normGift({...d,sel:null,drag:null,over:null,newG:'',newQ:1}),title:d.title||this.state.title});try{localStorage.setItem('argmin-gift-v1',JSON.stringify(d));}catch(e){}}
+    else if(this._giftPend){this._giftPend=false;this.giftSave(this.state.gift);}}
+  giftLoad(){try{const d=JSON.parse(localStorage.getItem('argmin-gift-v1')||'null');return d&&(Array.isArray(d.occs)||Array.isArray(d.gifts))?d:null;}catch(e){return null;}}
+  setSave(p){this.setState(p);this.saveCur(p);}
+  saveCur(over){const s={...this.state,...(over||{})};const id=s.model,fam=this.MODELS[id].fam;let data=null;
+    if(fam==='t')data={src:s.src,dst:s.dst,costs:s.costs,supply:s.supply,demand:s.demand};
+    else if(fam==='a')data=s.asg;else if(fam==='l')data=s.list;else if(fam==='g')data=s.graph;else if(fam==='p')data=s.pref;
+    if(!data)return;this._dirty=this._dirty||{};this._dirty[id]=true;const rec={data,title:s.title};
+    try{localStorage.setItem('argmin-'+id,JSON.stringify(rec));}catch(e){}
+    this._bt=this._bt||{};clearTimeout(this._bt[id]);this._bt[id]=setTimeout(()=>{fetch(this.SUPA_URL+'/rest/v1/argmin_boards',{method:'POST',headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id,model:id,family:fam,data:rec,updated_at:new Date().toISOString()})}).then(r=>{if(!r.ok)console.warn('argmin sync failed',r.status)}).catch(e=>console.warn('argmin sync failed',e));},600);}
+  loadLocalModel(id){try{const d=JSON.parse(localStorage.getItem('argmin-'+id)||'null');return d&&d.data?d:null;}catch(e){return null;}}
+  applyRec(id,fam,rec,p){const d=rec.data;if(!d)return;if(rec.title)p.title=rec.title;
+    if(fam==='t'&&d.src)Object.assign(p,{src:d.src,dst:d.dst,costs:d.costs,supply:d.supply,demand:d.demand});
+    if(fam==='a')p.asg=d;if(fam==='l')p.list=d;if(fam==='g')p.graph=d;if(fam==='p')p.pref=d;}
+  async supaLoadModel(id,fam){try{const r=await fetch(this.SUPA_URL+'/rest/v1/argmin_boards?id=eq.'+id+'&select=data',{headers:{apikey:this.SUPA_KEY,Authorization:'Bearer '+this.SUPA_KEY}});const rows=await r.json();const rec=rows&&rows[0]&&rows[0].data;
+    if(!rec||(this._dirty&&this._dirty[id])||this.state.model!==id)return;const p={};this.applyRec(id,fam,rec,p);this.setState(p);
+    try{localStorage.setItem('argmin-'+id,JSON.stringify(rec));}catch(e){}}catch(e){}}
+  mutGift(f){const g=this.normGift(this.state.gift);
+    const n={...g,occs:(g.occs||[]).map(o=>({...o,gifts:(o.gifts||[]).map(x=>({...x})),given:(o.given||[]).map(x=>({...x})),friends:[...(o.friends||[])]})),gifts:(g.gifts||[]).map(x=>({...x})),given:(g.given||[]).map(x=>({...x})),friends:[...(g.friends||[])]};
+    const o0=n.oi||0;f(n);
+    if(!n._skip&&n.occs[o0]){n.occs[o0]={...n.occs[o0],gifts:n.gifts,friends:n.friends,given:n.given};}
+    delete n._skip;
+    const t=n.occs[n.oi]||n.occs[0]||{};
+    if((n.oi||0)!==o0){n.sel=null;n.drag=null;n.over=null;}
+    n.gifts=t.gifts||[];n.friends=t.friends||[];n.given=t.given||[];
+    this.setState({gift:n});this.giftSave(n,this.state.title);}
+  mutPref(f){const q=this.state.pref;const n={...q,left:q.left.map(x=>({n:x.n,p:[...x.p]})),right:q.right.map(x=>({n:x.n,p:[...x.p]}))};f(n);this.setState({pref:n});this.saveCur({pref:n});}
+  renderVals(){
+    const st=this.state,P=this.props,h=React.createElement;
+    const theme=st.themeO??(P.theme??'light');
+    const showDeltas=P.showDeltas??true;
+    const fmt=n=>n.toLocaleString('en-US');
+    const mns=n=>n<0?'\u2212'+fmt(-n):fmt(n);
+    const scr=st.screen;
+    const goHome=()=>this.setState({screen:'home'});
+    const goSaved=()=>this.setState({screen:'saved'});
+    const wizModel={ship:'transportation',pick:'knapsack',route:'vrp',pair:'assignment'};const goEditor=()=>this.openModel(st.wiz?wizModel[st.wiz]:'transportation');
+    const goResults=()=>this.setState({screen:'results'});
+    const probActive=scr!=='saved';
+    // wizard
+    const recs={ship:{t:'Transportation problem',w:'You have sources with supply, destinations with demand, and a cost for each pair. If goods pass through depots on the way, pick transshipment instead.'},pick:{t:'Knapsack (0/1)',w:'You are selecting items under a budget or capacity limit. If you must cover every requirement with the fewest choices, look at set covering.'},route:{t:'Vehicle routing',w:'Several vehicles with capacity limits, each covering part of the stops. A single vehicle visiting every stop once is a travelling salesman problem.'},pair:{t:'Assignment problem',w:'One-to-one pairing at least total cost. If both sides rank each other instead of having costs, use stable matching.'}};
+    const chipBase="font-family:'IBM Plex Sans',sans-serif;font-size:12.5px;font-weight:500;padding:7px 13px;border-radius:999px;cursor:pointer;border:1px solid ";
+    const wizChips=[['ship','I\u2019m moving or shipping things'],['pick','I\u2019m choosing items under a limit'],['route','I\u2019m planning visits or routes'],['pair','I\u2019m pairing people or tasks']].map(([k,label])=>({label,on:()=>this.setState({wiz:k}),style:chipBase+(st.wiz===k?'var(--accent);background:var(--accent);color:#fff':'var(--line);background:var(--surface);color:var(--ink)')}));
+    // editor data
+    const S=st.src,D=st.dst,C=st.costs,SU=st.supply,DE=st.demand;
+    const ts=SU.reduce((a,b)=>a+(+b||0),0),td=DE.reduce((a,b)=>a+(+b||0),0),diff=ts-td,bal=diff===0;
+    const eHead=D.map((n,i)=>({v:n,on:e=>this.updName('dst',i,e.target.value),onDel:()=>this.delDest(i)}));
+    const eRows=C.map((row,r)=>({name:S[r],onName:e=>this.updName('src',r,e.target.value),supply:SU[r],onSupply:e=>this.updNum('supply',r,e.target.value),onDel:()=>this.delSource(r),cells:row.map((v,c)=>({v,on:e=>this.updCost(r,c,e.target.value)}))}));
+    const eDemand=DE.map((v,i)=>({v,on:e=>this.updNum('demand',i,e.target.value)}));
+    const badgeBase="flex:none;white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:4px 10px;border-radius:6px;border:1px solid ";
+    const badgeStyle=badgeBase+(bal?'color-mix(in oklab, var(--ok) 40%, var(--line));color:var(--ok);background:color-mix(in oklab, var(--ok) 10%, var(--surface));font-weight:600':'color-mix(in oklab, var(--warn) 45%, var(--line));color:var(--warn);background:color-mix(in oklab, var(--warn) 10%, var(--surface));font-weight:600');
+    const badgeTxt=bal?'Balanced \u00b7 '+fmt(ts)+' supply = '+fmt(td)+' demand':'Unbalanced by '+fmt(Math.abs(diff))+' \u00b7 '+(diff>0?'supply exceeds demand':'demand exceeds supply');
+    // graph els
+    const lY=i=>66+i*108, rY=i=>48+i*92;
+    const gH=Math.max(lY(S.length-1)+66,rY(D.length-1)+66,300);
+    const gEls=[];
+    C.forEach((row,r)=>row.forEach((cost,c)=>{if(c>=D.length||r>=S.length)return;
+      const y1=lY(r),y2=rY(c),t=[0.24,0.42,0.6,0.78][c%4];
+      gEls.push(h('line',{key:'ge'+r+'_'+c,x1:148,y1,x2:490,y2,stroke:'var(--line)',strokeWidth:1.2}));
+      gEls.push(h('text',{key:'gl'+r+'_'+c,x:148+342*t,y:y1+(y2-y1)*t-4,style:{font:"500 10px 'IBM Plex Mono',monospace",fill:'var(--mut)'}},String(cost)));
+    }));
+    S.forEach((n,i)=>{gEls.push(h('circle',{key:'gnl'+i,cx:120,cy:lY(i),r:28,fill:'var(--head)',stroke:'var(--line)',strokeWidth:1.2}));
+      gEls.push(h('text',{key:'gtl'+i,x:120,y:lY(i)+4,textAnchor:'middle',style:{font:"600 12px 'IBM Plex Mono',monospace",fill:'var(--ink)'}},fmt(SU[i]||0)));
+      gEls.push(h('text',{key:'gml'+i,x:84,y:lY(i)+4,textAnchor:'end',style:{font:"500 12px 'IBM Plex Sans',sans-serif",fill:'var(--mut)'}},n));});
+    D.forEach((n,i)=>{gEls.push(h('circle',{key:'gnr'+i,cx:520,cy:rY(i),r:28,fill:'var(--head)',stroke:'var(--line)',strokeWidth:1.2}));
+      gEls.push(h('text',{key:'gtr'+i,x:520,y:rY(i)+4,textAnchor:'middle',style:{font:"600 12px 'IBM Plex Mono',monospace",fill:'var(--ink)'}},fmt(DE[i]||0)));
+      gEls.push(h('text',{key:'gmr'+i,x:556,y:rY(i)+4,style:{font:"500 12px 'IBM Plex Sans',sans-serif",fill:'var(--mut)'}},n));});
+    // steps
+    const EX=this.EX||{src:[],dst:[],costs:[],supply:[],demand:[]},ST=this.STEPS||[],si=Math.max(0,Math.min(st.step,ST.length-1)),cs=ST[si]||{label:'',sub:'',meta:[],note:'',alloc:{}};
+    const famG=this.MODELS[st.model].fam==='g';
+    const GRm=famG&&this.GR?this.GR[st.model]:null;
+    const ACT=GRm?GRm.steps:ST;
+    const gsi=Math.min(st.step,ACT.length-1);
+    const mkTL=(steps,act)=>steps.map((s,i)=>({num:String(i+1),label:s.label,sub:s.sub,zt:s.zt,on:()=>this.setState({step:i}),
+      style:'padding:12px 14px;border-radius:10px;cursor:pointer;background:'+(i===act?'color-mix(in oklab, var(--accent) 6%, var(--surface))':'var(--surface)')+';box-shadow:inset 0 0 0 '+(i===act?'1.5px var(--accent)':'1px var(--line)'),
+      numStyle:"flex:none;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;"+(i===act?'background:var(--accent);color:#fff':'box-shadow:inset 0 0 0 1px var(--line);color:var(--mut)')}));
+    const timeline=mkTL(ST,si);
+    const gTimeline=GRm?mkTL(GRm.steps,gsi):[];
+    const GNp=this.GN||{},GEc=this.GEC||[];
+    const drawG=(g)=>{const els=[];const hasE=(list,a,b)=>!!list&&list.some(p=>(p[0]===a&&p[1]===b)||(p[0]===b&&p[1]===a));
+      const edge=(a,b,w,ext)=>{const p=GNp[a],q=GNp[b];
+        const inP=hasE(g.epath,a,b),inP2=hasE(g.epath2,a,b),inR=hasE(g.erelax,a,b),inC=hasE(g.ecut,a,b);
+        let stroke='var(--line)',sw=1.4,dash=null;
+        if(inP){stroke='var(--accent)';sw=3;}else if(inP2){stroke='var(--blue)';sw=3;}else if(inR){stroke='var(--accent)';sw=2;dash='5 4';}else if(inC){stroke='var(--warn)';sw=2.2;dash='3 4';}else if(ext){dash='4 4';}
+        els.push(h('line',{key:'e'+a+b,x1:p[0],y1:p[1],x2:q[0],y2:q[1],stroke,strokeWidth:sw,strokeDasharray:dash}));
+        const lab=(g.elab&&g.elab[a+'-'+b]!=null)?g.elab[a+'-'+b]:String(w);
+        if(lab==='')return;
+        const hot=inP||inR||inC,mx=(p[0]+q[0])/2,my=(p[1]+q[1])/2,tw=14+lab.length*6.6;
+        els.push(h('rect',{key:'r'+a+b,x:mx-tw/2,y:my-9,width:tw,height:18,rx:4,fill:'var(--surface)',stroke:hot?(inC?'var(--warn)':'var(--accent)'):(inP2?'var(--blue)':'var(--line2)')}));
+        els.push(h('text',{key:'t'+a+b,x:mx,y:my+3.5,textAnchor:'middle',style:{font:((hot||inP2)?'600':'500')+" 10.5px 'IBM Plex Mono',monospace",fill:hot?(inC?'var(--warn)':'var(--accent)'):(inP2?'var(--blue)':'var(--mut)')}},lab));};
+      GEc.forEach(ed=>edge(ed[0],ed[1],ed[2],false));
+      (g.extra||[]).forEach(ed=>edge(ed[0],ed[1],ed[2],true));
+      Object.keys(GNp).forEach(id=>{const x=GNp[id][0],y=GNp[id][1];
+        const cur=g.cur===id,set2=!!g.settled&&g.settled.includes(id),frt=!!g.front&&g.front.includes(id);
+        let fill='var(--head)',sc='var(--line)',sw2=1.2,tc2='var(--ink)';
+        if(cur){fill='var(--accent)';sc='var(--accent)';tc2='#fff';}else if(set2){fill='color-mix(in oklab, var(--accent) 15%, var(--surface))';sc='var(--accent)';sw2=1.6;}else if(frt){sc='var(--accent)';sw2=1.6;}
+        els.push(h('circle',{key:'n'+id,cx:x,cy:y,r:17,fill,stroke:sc,strokeWidth:sw2,strokeDasharray:frt&&!cur&&!set2?'3 3':null}));
+        els.push(h('text',{key:'nt'+id,x,y:y+4.5,textAnchor:'middle',style:{font:"600 13px 'IBM Plex Mono',monospace",fill:tc2}},id));
+        const nl=g.nlab?g.nlab[id]:null;
+        if(nl!=null)els.push(h('text',{key:'nl'+id,x,y:y+33,textAnchor:'middle',style:{font:"600 10.5px 'IBM Plex Mono',monospace",fill:(cur||set2)?'var(--accent)':'var(--mut)'}},nl));});
+      return els;};
+    const mkHead=hd=>hd.map((t,i)=>({t,style:(i===0?'flex:1;min-width:0;':'flex:none;width:74px;text-align:right;')+"font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.05em;color:var(--mut)"}));
+    const mkCells=r=>r.c.map((t,i)=>({t,style:(i===0?'flex:1;min-width:0;':"flex:none;width:74px;text-align:right;font-family:'IBM Plex Mono',monospace;")+'font-size:12.5px;font-weight:'+(r.hi?600:(i===0?500:400))+';color:'+(r.hi?'color-mix(in oklab, var(--accent) 85%, var(--ink))':'var(--ink)')}));
+    const gcs=GRm?GRm.steps[gsi]:null;
+    const finalStep=cs.kind==='opt';
+    const mRows=EX.src.map((name,r)=>({name,sup:fmt(EX.supply[r]),u:cs.u?mns(cs.u[r]):'',cells:EX.dst.map((_,c)=>{
+      const k=r+','+c,alloc=cs.alloc[k],cost=EX.costs[r][c];
+      const inLoop=cs.loop&&cs.loop.some(p=>p[0]===k),entering=cs.entering===k;
+      const delta=cs.deltas?cs.deltas[k]:undefined;
+      let ring='inset 0 0 0 0.5px var(--line2)';
+      if(entering)ring='inset 0 0 0 2px var(--accent)';else if(inLoop)ring='inset 0 0 0 1.5px color-mix(in oklab, var(--accent) 55%, var(--line))';
+      const bg=alloc!=null?(finalStep?'color-mix(in oklab, var(--accent) 15%, var(--surface))':'color-mix(in oklab, var(--ink) 8%, var(--surface))'):'var(--surface)';
+      return{cost:String(cost),allocTxt:alloc!=null?fmt(alloc):'',
+        style:'position:relative;width:96px;height:64px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:'+bg+';box-shadow:'+ring,
+        allocStyle:"font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;color:"+(finalStep?'color-mix(in oklab, var(--accent) 80%, var(--ink))':'var(--ink)'),
+        deltaTxt:(showDeltas&&delta!==undefined&&alloc==null)?(delta>0?'+'+delta:'\u2212'+(-delta)):'',
+        deltaStyle:"position:absolute;left:8px;bottom:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:500;color:"+(delta<0?'var(--accent)':'var(--mut)')};
+    })}));
+    const vCells=EX.dst.map((_,c)=>({t:cs.v?mns(cs.v[c]):''}));
+    const cx=c=>120+c*96+48,cy=r=>36+r*64+32;
+    const loopEls=[];
+    if(cs.loop){const pts=cs.loop.map(p=>{const[r,c]=p[0].split(',').map(Number);return[cx(c),cy(r),p[1]];});
+      loopEls.push(h('path',{key:'lp',d:'M '+pts.map(p=>p[0]+' '+p[1]).join(' L ')+' Z',fill:'none',stroke:'var(--accent)',strokeWidth:2,strokeDasharray:'6 5',strokeLinejoin:'round'}));
+      pts.forEach((p,i)=>{loopEls.push(h('circle',{key:'lc'+i,cx:p[0]-30,cy:p[1]-16,r:9,fill:'var(--accent)'}));
+        loopEls.push(h('text',{key:'lt'+i,x:p[0]-30,y:p[1]-12.2,textAnchor:'middle',style:{font:"600 12px 'IBM Plex Mono',monospace",fill:'var(--surface)'}},p[2]));});}
+    // answer tab
+    const FA=this.FINAL||{},hov=st.hover,noop=()=>{};
+    const clear=()=>this.setState({hover:null});
+    const aRows=EX.src.map((name,r)=>({name,sup:fmt(EX.supply[r]),cells:EX.dst.map((_,c)=>{
+      const k=r+','+c,alloc=FA[k];
+      return{cost:String(EX.costs[r][c]),allocTxt:alloc?fmt(alloc):'',
+        style:'position:relative;width:96px;height:64px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;background:'+(alloc?'color-mix(in oklab, var(--accent) 15%, var(--surface))':'var(--surface)')+';box-shadow:'+(hov===k?'inset 0 0 0 2px var(--accent)':'inset 0 0 0 0.5px var(--line2)')+(alloc?';cursor:pointer':''),
+        allocStyle:"font-family:'IBM Plex Mono',monospace;font-size:17px;font-weight:600;color:color-mix(in oklab, var(--accent) 80%, var(--ink))",
+        onEnter:alloc?()=>this.setState({hover:k}):noop,onLeave:alloc?clear:noop};
+    })}));
+    const aL=[78,168,258],aR=[52,136,220,304];
+    const flowEls=[];
+    Object.entries(FA).forEach(([k,u])=>{const[r,c]=k.split(',').map(Number);const on=hov===k;
+      const x1=124,y1=aL[r],x2=336,y2=aR[c];
+      flowEls.push(h('line',{key:'fe'+k,x1,y1,x2,y2,stroke:on?'var(--accent)':'color-mix(in oklab, var(--accent) 55%, var(--mut))',strokeWidth:1.5+u/55,strokeLinecap:'round',opacity:on?1:0.7,style:{cursor:'pointer'},onMouseEnter:()=>this.setState({hover:k}),onMouseLeave:clear}));
+      flowEls.push(h('text',{key:'fl'+k,x:x1+(x2-x1)*0.55,y:y1+(y2-y1)*0.55-7,textAnchor:'middle',style:{font:(on?'600':'500')+" 11px 'IBM Plex Mono',monospace",fill:on?'var(--accent)':'var(--mut)'}},fmt(u)));});
+    EX.src.forEach((n,i)=>{flowEls.push(h('circle',{key:'fnl'+i,cx:96,cy:aL[i],r:26,fill:'var(--head)',stroke:'var(--line)',strokeWidth:1.2}));
+      flowEls.push(h('text',{key:'ftl'+i,x:96,y:aL[i]+4,textAnchor:'middle',style:{font:"600 11.5px 'IBM Plex Mono',monospace",fill:'var(--ink)'}},fmt(EX.supply[i])));
+      flowEls.push(h('text',{key:'fml'+i,x:62,y:aL[i]+4,textAnchor:'end',style:{font:"500 11.5px 'IBM Plex Sans',sans-serif",fill:'var(--mut)'}},n));});
+    EX.dst.forEach((n,i)=>{flowEls.push(h('circle',{key:'fnr'+i,cx:364,cy:aR[i],r:26,fill:'var(--head)',stroke:'var(--line)',strokeWidth:1.2}));
+      flowEls.push(h('text',{key:'ftr'+i,x:364,y:aR[i]+4,textAnchor:'middle',style:{font:"600 11.5px 'IBM Plex Mono',monospace",fill:'var(--ink)'}},fmt(EX.demand[i])));
+      flowEls.push(h('text',{key:'fmr'+i,x:398,y:aR[i]+4,style:{font:"500 11.5px 'IBM Plex Sans',sans-serif",fill:'var(--mut)'}},n));});
+    // tabs
+    const tab=st.tab;
+    const tc=t=>tab===t?'var(--ink)':'var(--mut)',tb=t=>tab===t?'var(--accent)':'transparent';
+    const seg=m=>'padding:8px 13px;border:none;cursor:pointer;font-size:12.5px;font-weight:500;'+(st.mode===m?'background:var(--ink);color:var(--bg)':'background:var(--surface);color:var(--mut)');
+    // per-model editors
+    const fam=this.MODELS[st.model].fam,modelName=this.MODELS[st.model].name;
+    const go={};Object.keys(this.MODELS).forEach(id=>{go[id]=()=>this.openModel(id);});
+    // assignment
+    const A=st.asg||{rows:[],cols:[],costs:[]};
+    const aHead=A.cols.map((n,i)=>({v:n,on:e=>this.mutAsg(x=>{x.cols[i]=e.target.value;}),onDel:()=>{if(A.cols.length>2)this.mutAsg(x=>{x.cols.splice(i,1);x.costs.forEach(r=>r.splice(i,1));});}}));
+    const aERows=A.rows.map((n,r)=>({name:n,onName:e=>this.mutAsg(x=>{x.rows[r]=e.target.value;}),onDel:()=>{if(A.rows.length>2)this.mutAsg(x=>{x.rows.splice(r,1);x.costs.splice(r,1);});},cells:(A.costs[r]||[]).map((v,c)=>({v,on:e=>this.mutAsg(x=>{x.costs[r][c]=e.target.value===''?0:(+e.target.value||0);})}))}));
+    const aSq=A.rows.length===A.cols.length;
+    const okBadge='color-mix(in oklab, var(--ok) 40%, var(--line));color:var(--ok);background:color-mix(in oklab, var(--ok) 10%, var(--surface));font-weight:600';
+    const warnBadge='color-mix(in oklab, var(--warn) 45%, var(--line));color:var(--warn);background:color-mix(in oklab, var(--warn) 10%, var(--surface));font-weight:600';
+    const neutBadge='var(--line);color:var(--ink);background:var(--head);font-weight:600';
+    // list
+    const L=st.list||{cols:[],items:[],cap:null,hint:''};
+    const numW=col=>col.txt?170:120;
+    const lCols=L.cols.map(c=>({l:c.l+(c.u?' ('+c.u.toUpperCase()+')':''),hStyle:'width:'+numW(c)+'px;height:38px;display:flex;align-items:center;justify-content:'+(c.txt?'flex-start':'flex-end')+";padding:0 14px;box-sizing:border-box;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.06em;color:var(--mut)"}));
+    const lRows=L.items.map((it,r)=>({name:it[0],onName:e=>this.mutList(x=>{x.items[r][0]=e.target.value;}),onDel:()=>{if(L.items.length>1)this.mutList(x=>{x.items.splice(r,1);});},cells:L.cols.map((c,ci)=>({v:it[ci+1],on:e=>this.mutList(x=>{x.items[r][ci+1]=c.txt?e.target.value:(e.target.value===''?0:(+e.target.value||0));}),wrapStyle:'width:'+numW(c)+'px;height:46px;box-sizing:border-box',inStyle:'width:100%;height:100%;box-sizing:border-box;background:none;border:none;outline:none;padding:0 14px;font-size:13px;'+(c.txt?'text-align:left':"text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13.5px")}))}));
+    const lTotals=L.cols.map((c,ci)=>{const base='width:'+numW(c)+"px;height:40px;display:flex;align-items:center;justify-content:flex-end;padding:0 14px;box-sizing:border-box;font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600";if(c.txt)return{v:'',style:base};const s=L.items.reduce((a,it)=>a+(+it[ci+1]||0),0);return{v:'\u03a3 '+fmt(s)+(c.u?' '+c.u:''),style:base};});
+    // graph
+    const G=st.graph||{nodes:[],edges:[],from:'',to:'',ft:false,w:'cost',veh:2,hint:''};
+    const gOptEls=G.nodes.map(n=>h('option',{key:n.id,value:n.id},n.id));
+    const gERows=G.edges.map((ed,i)=>({a:ed.a,b:ed.b,w:ed.w,optEls:gOptEls,onA:e=>this.mutGraph(x=>{x.edges[i].a=e.target.value;}),onB:e=>this.mutGraph(x=>{x.edges[i].b=e.target.value;}),onW:e=>this.mutGraph(x=>{x.edges[i].w=e.target.value===''?0:(+e.target.value||0);}),onDel:()=>{if(G.edges.length>1)this.mutGraph(x=>{x.edges.splice(i,1);});}}));
+    const gNodeChips=G.nodes.map(n=>({id:n.id,onDel:()=>{if(G.nodes.length>2)this.mutGraph(x=>{x.nodes=x.nodes.filter(m=>m.id!==n.id);x.edges=x.edges.filter(ed=>ed.a!==n.id&&ed.b!==n.id);if(x.from===n.id)x.from=x.nodes[0].id;if(x.to===n.id)x.to=x.nodes[x.nodes.length-1].id;});}}));
+    const geEls=[];let geH=300;
+    if(scr==='editor'&&fam==='g'&&G.nodes.length){
+      const pos={};G.nodes.forEach(n=>{pos[n.id]=n;geH=Math.max(geH,n.y+50);});
+      G.edges.forEach((ed,i)=>{const p=pos[ed.a],q=pos[ed.b];if(!p||!q)return;
+        geEls.push(h('line',{key:'e'+i,x1:p.x,y1:p.y,x2:q.x,y2:q.y,stroke:'var(--line)',strokeWidth:1.4}));
+        const mx=(p.x+q.x)/2,my=(p.y+q.y)/2,tw=12+String(ed.w).length*7;
+        geEls.push(h('rect',{key:'er'+i,x:mx-tw/2,y:my-9,width:tw,height:17,rx:4,fill:'var(--surface)',stroke:'var(--line2)'}));
+        geEls.push(h('text',{key:'et'+i,x:mx,y:my+3.5,textAnchor:'middle',style:{font:"500 10.5px 'IBM Plex Mono',monospace",fill:'var(--mut)'}},String(ed.w)));});
+      G.nodes.forEach(n=>{const isF=G.ft&&G.from===n.id,isT=G.ft&&G.to===n.id;
+        geEls.push(h('circle',{key:'n'+n.id,cx:n.x,cy:n.y,r:17,fill:isT?'var(--accent)':'var(--head)',stroke:isF?'var(--accent)':'var(--line)',strokeWidth:isF?2.2:1.2}));
+        geEls.push(h('text',{key:'nt'+n.id,x:n.x,y:n.y+4.5,textAnchor:'middle',style:{font:"600 13px 'IBM Plex Mono',monospace",fill:isT?'#fff':(isF?'var(--accent)':'var(--ink)')}},n.id));
+        if(isF||isT)geEls.push(h('text',{key:'nl'+n.id,x:n.x,y:n.y+32,textAnchor:'middle',style:{font:"500 10px 'IBM Plex Mono',monospace",fill:'var(--accent)'}},isF?'from':'to'));});}
+    // preferences
+    const Pf=st.pref||{left:[],right:[],lHead:'',rHead:'',lOne:'',rOne:''};
+    const chipB='display:inline-flex;align-items:center;white-space:nowrap;gap:6px;padding:3px 10px 3px 4px;border-radius:999px;border:1px solid var(--line);background:var(--surface);cursor:pointer;font-size:12px;font-weight:500;color:var(--ink)';
+    const mkPref=(side,other,key)=>side.map((per,i)=>({name:per.n,
+      onName:e=>this.mutPref(x=>{x[key][i].n=e.target.value;}),
+      onDel:()=>{if(side.length>2)this.mutPref(x=>{x[key].splice(i,1);const ok2=key==='left'?'right':'left';x[ok2].forEach(o=>{o.p=o.p.filter(v=>v!==i).map(v=>v>i?v-1:v);});});},
+      chips:per.p.map((oi,rank)=>({rank:String(rank+1),name:other[oi]?other[oi].n:'?',
+        on:()=>{if(rank>0)this.mutPref(x=>{const arr=x[key][i].p;const t=arr[rank-1];arr[rank-1]=arr[rank];arr[rank]=t;});},
+        style:chipB+(rank===0?';border-color:color-mix(in oklab, var(--accent) 45%, var(--line))':''),
+        rankS:"flex:none;width:16px;height:16px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:600;"+(rank===0?'background:var(--accent);color:#fff':'background:var(--head);color:var(--mut)')}))}));
+    // gift board
+    const GF=this.normGift(st.gift)||{occs:[],oi:0,gifts:[],friends:[],given:[],sel:null,drag:null,over:null,newG:'',newQ:1};
+    const gfOccs=(GF.occs||[]).map((o,i)=>{const oact=i===(GF.oi||0),many=(GF.occs||[]).length>1;
+      const otot=(o.gifts||[]).reduce((a,x)=>a+Math.max(1,+x.q||1),0),odone=(o.given||[]).length;
+      return{name:o.name||'Occasion',
+        wrapS:'display:flex;align-items:center;gap:7px;padding:7px 12px;border:1px solid '+(oact?'var(--ink)':'var(--line)')+';border-radius:999px;background:'+(oact?'var(--ink)':'var(--surface)')+';color:'+(oact?'var(--bg)':'var(--ink)')+';cursor:pointer',
+        hoverS:oact?'':'border-color:var(--accent)',
+        on:()=>{if(!oact)this.gfSwitch(i);},
+        inputS:"border:none;background:none;outline:none;padding:0;font-family:inherit;font-size:12.5px;font-weight:600;color:inherit;cursor:"+(oact?'text':'pointer')+";width:"+Math.max(5,(o.name||'').length+1)+"ch",
+        onName:e=>{const v=e.target.value;this.mutGift(n=>{n.occs[i]={...n.occs[i],name:v};});},
+        cnt:odone+'/'+otot,
+        cntS:"font-family:'IBM Plex Mono',monospace;font-size:10.5px;opacity:0.65",
+        delS:'border:none;background:none;cursor:pointer;font-size:12px;line-height:1;padding:0;color:inherit;opacity:'+(many?'0.55':'0')+';pointer-events:'+(many?'auto':'none'),
+        delHover:'opacity:1',
+        onDel:e=>{e.stopPropagation();this.gfDelOcc(i);}};});
+    const gfCol0=i=>['#e8590c','#0f766e','#4263eb','#c2255c','#9c36b5','#2f9e44'][i%6];
+    const gfFolders=(GF.occs||[]).map((o,i)=>{const many=(GF.occs||[]).length>1;
+      const tot=(o.gifts||[]).reduce((a,x)=>a+Math.max(1,+x.q||1),0),done=(o.given||[]).length,fr=(o.friends||[]).length;
+      const pct=tot?Math.round(done/tot*100):0;
+      return{name:o.name||'Occasion',
+        on:()=>this.gfSwitch(i),
+        cardS:'box-sizing:border-box;width:100%;display:flex;flex-direction:column;gap:10px;padding:16px 16px 15px;border:1px solid var(--line);border-top:3px solid '+gfCol0(i)+';border-radius:12px;background:var(--surface);cursor:pointer;text-align:left',
+        cardHover:'border-color:color-mix(in oklab, '+gfCol0(i)+' 45%, var(--line));border-top-color:'+gfCol0(i)+';box-shadow:0 3px 14px color-mix(in oklab, '+gfCol0(i)+' 14%, transparent)',
+        onName:e=>{const v=e.target.value;this.mutGift(n=>{n.occs[i]={...n.occs[i],name:v};});},
+        stop:e=>e.stopPropagation(),
+        onRename:e=>{e.stopPropagation();const inp=e.currentTarget.parentNode.querySelector('input');if(inp){inp.focus();inp.select();}},
+        meta:tot?(fmt(tot)+' gift'+(tot===1?'':'s')+' · '+fmt(fr)+' friend'+(fr===1?'':'s')):'Empty — add gifts',
+        barS:'height:4px;border-radius:999px;background:var(--head);overflow:hidden;display:'+(tot?'block':'none'),
+        barFillS:'height:100%;border-radius:999px;width:'+pct+'%;background:'+(tot&&done===tot?'var(--ok)':gfCol0(i)),
+        stat:tot?(done===tot?'All assigned':fmt(done)+' of '+fmt(tot)+' assigned'):'Nothing assigned yet',
+        statS:'font-family:\'IBM Plex Mono\',monospace;font-size:10.5px;letter-spacing:0.04em;color:'+(tot&&done===tot?'var(--ok)':'var(--mut)'),
+        delS:'flex:none;width:26px;height:26px;border:1px solid var(--line);border-radius:7px;background:var(--surface);cursor:pointer;font-size:14px;line-height:1;color:var(--mut);padding:0;display:'+(many?'block':'none'),
+        onDel:e=>{e.stopPropagation();this.gfDelOcc(i);}};});
+    const GFg=GF.gifts||[],GFv=GF.given||[];
+    const gfSel=GF.sel,gfDrag=GF.drag,gfArmed=gfSel!=null||gfDrag!=null;
+    const gfQ=i=>Math.max(1,+GFg[i].q||1);
+    const gfLeftOf=i=>gfQ(i)-GFv.filter(x=>x.g===i).length;
+    const gfGive=(gi,fi)=>{if(gi==null||!GFg[gi])return;this.mutGift(n=>{
+      const left=Math.max(1,+n.gifts[gi].q||1)-n.given.filter(x=>x.g===gi).length;
+      if(left>0)n.given.push({g:gi,to:fi});
+      n.sel=null;n.drag=null;n.over=null;});};
+    const gfCol=i=>['#e8590c','#0f766e','#4263eb','#c2255c','#9c36b5','#2f9e44'][i%6];
+    const gfPool=GFg.map((g,i)=>({g,i})).filter(x=>gfLeftOf(x.i)>0).map(x=>{
+      const q=gfQ(x.i),left=gfLeftOf(x.i),act=gfSel===x.i||gfDrag===x.i,col=gfCol(x.i);
+      return{name:x.g.n,
+        dotStyle:'flex:none;width:9px;height:9px;border-radius:50%;background:'+(act?'rgba(255,255,255,0.85)':col),
+        qtyTxt:q>1?left+' of '+q:'',
+        qtyStyle:q>1?("flex:none;font-family:'IBM Plex Mono',monospace;font-size:10.5px;font-weight:600;padding:2px 7px;border-radius:999px;"+(act?'background:rgba(255,255,255,0.22);color:#fff':'background:color-mix(in oklab, '+col+' 14%, var(--surface));color:'+col)):'display:none',
+        stepStyle:'width:20px;height:20px;border-radius:6px;cursor:pointer;font-size:12px;line-height:1;padding:0;border:1px solid '+(act?'rgba(255,255,255,0.4);background:transparent;color:#fff':'var(--line);background:var(--surface);color:var(--mut)'),
+        style:'display:flex;align-items:center;gap:8px;text-align:left;padding:8px 8px 8px 12px;border-radius:9px;cursor:grab;font-size:13px;font-weight:500;user-select:none;border:1px solid '+(act?col+';background:'+col+';color:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.18)':'var(--line);background:var(--surface);color:var(--ink)'),
+        on:()=>this.mutGift(n=>{n.sel=n.sel===x.i?null:x.i;}),
+        onDragStart:e=>{if(e.dataTransfer){e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain',String(x.i));}catch(err){}}this.mutGift(n=>{n.drag=x.i;n.sel=x.i;});},
+        onDragEnd:()=>this.mutGift(n=>{n.drag=null;n.over=null;}),
+        onInc:e=>{e.stopPropagation();this.mutGift(n=>{n.gifts[x.i].q=Math.max(1,+n.gifts[x.i].q||1)+1;});},
+        onDec:e=>{e.stopPropagation();this.mutGift(n=>{const used=n.given.filter(y=>y.g===x.i).length;n.gifts[x.i].q=Math.max(1,used,Math.max(1,+n.gifts[x.i].q||1)-1);});},
+        onDelete:e=>{e.stopPropagation();this.mutGift(n=>{n.gifts.splice(x.i,1);n.given=n.given.filter(y=>y.g!==x.i).map(y=>y.g>x.i?{...y,g:y.g-1}:y);n.sel=n.sel===x.i?null:(n.sel!=null&&n.sel>x.i?n.sel-1:n.sel);n.drag=n.drag===x.i?null:(n.drag!=null&&n.drag>x.i?n.drag-1:n.drag);});},
+        hoverS:act?'':'border-color:'+col+';box-shadow:0 1px 4px color-mix(in oklab, '+col+' 25%, transparent)',
+        stepHover:act?'background:rgba(255,255,255,0.18)':'border-color:'+col+';color:'+col,
+        delStyle:'flex:none;width:20px;height:20px;border:none;border-radius:6px;background:none;cursor:pointer;font-size:12.5px;line-height:1;padding:0;color:'+(act?'rgba(255,255,255,0.75)':'var(--mut)'),
+        delHover:act?'background:rgba(255,255,255,0.18);color:#fff':'background:color-mix(in oklab, var(--rose) 12%, var(--surface));color:var(--rose)'};});
+    const gfTotal=GFg.reduce((a,_,i)=>a+gfQ(i),0),gfDone=GFv.length,gfLeftN=gfTotal-gfDone;
+    const gfAdd=()=>{const t=(GF.newG||'').trim();if(!t)return;const q=Math.max(1,Math.min(99,+GF.newQ||1));this.mutGift(n=>{n.gifts.push({n:t,q});n.newG='';n.newQ=1;});};
+    const gfFriends=GF.friends.map((fn,fi)=>{const mine=GFv.map((x,vi)=>({x,vi})).filter(o=>o.x.to===fi);const isOver=GF.over===fi;
+      return{name:fn,count:String(mine.length),stop:e=>e.stopPropagation(),
+        onName:e=>this.mutGift(n=>{n.friends[fi]=e.target.value;}),
+        onDel:e=>{e.stopPropagation();if(GF.friends.length>1)this.mutGift(n=>{n.friends.splice(fi,1);n.given=n.given.filter(g=>g.to!==fi).map(g=>g.to>fi?{...g,to:g.to-1}:g);n.sel=null;n.drag=null;n.over=null;});},
+        onAssign:()=>{if(gfSel!=null)gfGive(gfSel,fi);},
+        onDragOver:e=>{e.preventDefault();if(e.dataTransfer)e.dataTransfer.dropEffect='move';if(GF.over!==fi)this.mutGift(n=>{n.over=fi;});},
+        onDragLeave:()=>{if(GF.over===fi)this.mutGift(n=>{n.over=null;});},
+        onDrop:e=>{e.preventDefault();let t='';if(e.dataTransfer){try{t=e.dataTransfer.getData('text/plain');}catch(err){}}
+          const dv=GF.dragV!=null?GF.dragV:(t&&t.slice(0,2)==='v:'?+t.slice(2):null);
+          if(dv!=null){this.mutGift(n=>{if(n.given[dv])n.given[dv].to=fi;n.dragV=null;n.sel=null;n.drag=null;n.over=null;});return;}
+          let gi=gfDrag;if(gi==null&&t!=='')gi=+t;
+          if(gi==null)gi=gfSel;gfGive(gi,fi);},
+        style:'background:'+(isOver?'color-mix(in oklab, var(--accent) 7%, var(--surface))':'var(--surface)')+';border-radius:12px;padding:14px 14px 12px;box-shadow:inset 0 0 0 '+(isOver?'2px var(--accent)':(gfArmed?'1.5px color-mix(in oklab, var(--accent) 50%, var(--line))':'1px var(--line)'))+';cursor:'+(gfSel!=null?'pointer':'default'),
+        hoverS:gfSel!=null?'box-shadow:inset 0 0 0 2px var(--accent);background:color-mix(in oklab, var(--accent) 6%, var(--surface))':'',
+        hint:mine.length?'':(isOver?'Drop to give':(gfArmed?'Drop or click to give':'Drag a gift here')),
+        gifts:mine.map(o=>({name:GFg[o.x.g]?GFg[o.x.g].n:'?',dotStyle:'flex:none;width:8px;height:8px;border-radius:50%;background:'+gfCol(o.x.g),
+          onDragStart:e=>{if(e.dataTransfer){e.dataTransfer.effectAllowed='move';try{e.dataTransfer.setData('text/plain','v:'+o.vi);}catch(err){}}this.mutGift(n=>{n.dragV=o.vi;});},
+          onDragEnd:()=>this.mutGift(n=>{n.dragV=null;n.over=null;}),
+          onRemove:e=>{e.stopPropagation();this.mutGift(n=>{n.given.splice(o.vi,1);});}}))};});
+    const pLRows=mkPref(Pf.left,Pf.right,'left'),pRRows=mkPref(Pf.right,Pf.left,'right');
+    const pEq=Pf.left.length===Pf.right.length;
+    const addP=key=>this.mutPref(x=>{const ok2=key==='left'?'right':'left';const one=key==='left'?x.lOne:x.rOne;const idx=x[key].length;x[key].push({n:one.charAt(0).toUpperCase()+one.slice(1)+' '+(idx+1),p:x[ok2].map((_,j)=>j)});x[ok2].forEach(o=>o.p.push(idx));});
+    return {
+      rootRef:this.rootRef,theme,themeLabel:theme==='light'?'Dark':'Light',onTheme:()=>this.setState({themeO:theme==='light'?'dark':'light'}),
+      goHome,goSaved,goEditor,goResults,onEditData:()=>this.setState({screen:'editor',model:'transportation'}),onSaveModel:goSaved,
+      onSolve:()=>this.setState({screen:'results',tab:'steps',step:this.MODELS[this.state.model].fam==='g'?0:1,hover:null}),
+      navHomeC:probActive?'var(--ink)':'var(--mut)',navHomeBar:probActive?'var(--ink)':'transparent',
+      navSavedC:probActive?'var(--mut)':'var(--ink)',navSavedBar:probActive?'transparent':'var(--ink)',
+      isHome:scr==='home',isEdT:scr==='editor'&&fam==='t',isEdA:scr==='editor'&&fam==='a',isEdL:scr==='editor'&&fam==='l',isEdG:scr==='editor'&&fam==='g',isEdP:scr==='editor'&&fam==='p',isEdGift:scr==='editor'&&fam==='gf',isResults:scr==='results'&&!famG,isResultsG:scr==='results'&&famG,isSaved:scr==='saved',
+      wizOpen:st.wizOpen,onWizToggle:()=>this.setState({wizOpen:!st.wizOpen}),wizBtn:st.wizOpen?'Close':'Help me choose',
+      wizChips,hasRec:!!st.wiz,recT:st.wiz?recs[st.wiz].t:'',recW:st.wiz?recs[st.wiz].w:'',
+      title:st.title,onTitle:e=>{const t=e.target.value;this.setState({title:t});if(fam==='gf'&&st.gift)this.giftSave(this.normGift(st.gift),t);else if(scr==='editor')this.saveCur({title:t});},
+      onLoadExample:()=>this.openModel(st.model,true),
+      pasteBtnS:'padding:8px 13px;border:1px solid '+(st.pasteOpen?'var(--mut)':'var(--line)')+';border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500',
+      onPasteToggle:()=>this.setState({pasteOpen:!st.pasteOpen}),pasteOpen:st.pasteOpen,pasteTxt:st.pasteTxt,
+      onPasteTxt:e=>this.setState({pasteTxt:e.target.value}),onPasteApply:()=>this.applyPaste(),
+      onModeMatrix:()=>this.setState({mode:'matrix'}),onModeGraph:()=>this.setState({mode:'graph'}),
+      modeMatrixS:seg('matrix'),modeGraphS:seg('graph'),isMatrix:st.mode==='matrix',isGraph:st.mode==='graph',
+      badgeStyle,badgeTxt,showDummy:!bal,onAddDummy:()=>this.addDummy(),
+      dummyLabel:diff>0?'+ Add dummy destination':'+ Add dummy source',
+      sizeTxt:S.length+' sources \u00b7 '+D.length+' destinations',
+      onAddSource:()=>this.addSource(),onAddDest:()=>this.addDest(),
+      eHead,eRows,eDemand,cornerTxt:fmt(td)+' / '+fmt(ts),cornerC:bal?'var(--mut)':'var(--ink)',cornerW:bal?'500':'600',
+      gH,gEls,
+      method:st.method,onMethod:e=>this.setState({method:e.target.value}),
+      timeline,panelTitle:cs.label+' \u2014 '+cs.sub,metaChips:cs.meta.map(t=>({t})),panelNote:cs.note,
+      mRows,vCells,uHead:cs.u?'u\u1d62':'',vHead:cs.v?'v\u2c7c':'',loopEls,
+      onPrev:()=>this.setState({step:Math.max(0,gsi-1)}),onNext:()=>this.setState({step:Math.min(ACT.length-1,gsi+1)}),
+      stepPos:(gsi+1)+' / '+ACT.length,
+      isTabA:tab==='answer',isTabS:tab==='steps',isTabI:tab==='insight',
+      onTabA:()=>this.setState({tab:'answer'}),onTabS:()=>this.setState({tab:'steps'}),onTabI:()=>this.setState({tab:'insight'}),
+      tabAC:tc('answer'),tabAB:tb('answer'),tabSC:tc('steps'),tabSB:tb('steps'),tabIC:tc('insight'),tabIB:tb('insight'),
+      aRows,flowEls,
+      go,modelName,
+      aHead,aERows,aBadgeS:badgeBase+(aSq?okBadge:warnBadge),aBadgeT:aSq?'Square \u00b7 '+A.rows.length+' workers \u00d7 '+A.cols.length+' tasks':'Not square \u00b7 Hungarian needs equal sides',aShowDummy:!aSq,onAsgDummy:()=>{if(A.rows.length<A.cols.length)this.mutAsg(x=>{x.rows.push('Dummy');x.costs.push(x.cols.map(()=>0));});else this.mutAsg(x=>{x.cols.push('Dummy');x.costs.forEach(r=>r.push(0));});},aDummyLabel:A.rows.length<A.cols.length?'+ Add dummy worker':'+ Add dummy task',
+      onAddTask:()=>this.mutAsg(x=>{x.cols.push('Task '+(x.cols.length+1));x.costs.forEach(r=>r.push(0));}),
+      onAddWorker:()=>this.mutAsg(x=>{x.rows.push('Worker '+(x.rows.length+1));x.costs.push(x.cols.map(()=>0));}),
+      lCols,lRows,lTotals,lBadgeS:badgeBase+neutBadge,lBadgeT:L.items.length+' items',hasCap:L.cap!=null,capV:L.cap,onCap:e=>this.mutList(x=>{x.cap=e.target.value===''?0:(+e.target.value||0);}),capLabel:L.capLabel||'',capUnit:L.capUnit||'',lHint:L.hint||'',lTotLabel:'\u03a3 '+L.items.length+' items',
+      onAddItem:()=>this.mutList(x=>{x.items.push(['Item '+(x.items.length+1),...x.cols.map(c=>c.txt?'':0)]);}),
+      gERows,gNodeChips,gOptEls,geEls,geH,gBadgeS:badgeBase+neutBadge,gBadgeT:G.nodes.length+' nodes \u00b7 '+G.edges.length+' edges',gWHead:(G.w||'').toUpperCase(),gFT:!!G.ft,gFrom:G.from,gTo:G.to,
+      onGFrom:e=>this.mutGraph(x=>{x.from=e.target.value;}),onGTo:e=>this.mutGraph(x=>{x.to=e.target.value;}),
+      gIsVrp:st.model==='vrp',gVeh:G.veh,onGVeh:e=>this.mutGraph(x=>{x.veh=e.target.value===''?1:(+e.target.value||1);}),
+      onAddEdge:()=>this.mutGraph(x=>{if(x.nodes.length<2)return;x.edges.push({a:x.nodes[0].id,b:x.nodes[1].id,w:1});}),
+      onAddNode:()=>this.mutGraph(x=>{const used=x.nodes.map(n=>n.id);let nid='';for(const ch of 'GHIJKLMNOPQRSTUVWXYZABCDEF'){if(!used.includes(ch)){nid=ch;break;}}if(!nid)return;const k=x.nodes.length;x.nodes.push({id:nid,x:70+((k*97)%440),y:296+(k%2)*38});}),
+      gDiagHint:G.hint||'',
+      gTimeline,onEditG:()=>this.setState({screen:'editor'}),
+      grBadgeS:GRm?"flex:none;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;padding:4px 9px;border-radius:6px;background:var(--"+GRm.badge[1]+");color:#fff":'',
+      grBadgeT:GRm?GRm.badge[0]:'',grMethod:GRm?GRm.method:'',
+      grObjPre:GRm?GRm.objPre:'',grObjVal:GRm?GRm.objVal:'',grObjNote:GRm?GRm.objNote:'',
+      grPanelTitle:gcs?gcs.label+' \u2014 '+gcs.sub:'',grChips:gcs?gcs.meta.map(t=>({t})):[],grNote:gcs?gcs.note:'',
+      grStepEls:gcs?drawG(gcs.g):[],grTHead:GRm?mkHead(GRm.tHead):[],grTRows:gcs?gcs.rows.map(r=>({cells:mkCells(r)})):[],
+      grLegend:GRm?GRm.legend:[],
+      grAnsEls:GRm?drawG(GRm.ans.g):[],grAnsHead:GRm?GRm.ans.head:'',grAnsTHead:GRm?mkHead(GRm.ans.tHead):[],grAnsRows:GRm?GRm.ans.rows.map(r=>({cells:mkCells(r)})):[],grAnsNote:GRm?GRm.ans.note:'',
+      grInsight:GRm?GRm.insight.map(c=>({t:c.t,p:c.p||'',rows:(c.rows||[]).map(x=>({l:x[0],v:x[1]})),foot:c.foot||''})):[],
+      pLRows,pRRows,pBadgeS:badgeBase+(pEq?okBadge:warnBadge),pBadgeT:Pf.left.length+' \u00d7 '+Pf.right.length+(pEq?' \u00b7 complete preferences':' \u00b7 sides differ'),pLHead:Pf.lHead,pRHead:Pf.rHead,pAddL:'+ Add '+(Pf.lOne||''),pAddR:'+ Add '+(Pf.rOne||''),
+      onAddL:()=>addP('left'),onAddR:()=>addP('right'),
+      gfPool,gfFriends,gfLeft:String(gfLeftN),gfNew:GF.newG,gfNewQ:GF.newQ==null?1:GF.newQ,
+      onGfNew:e=>this.mutGift(n=>{n.newG=e.target.value;}),
+      onGfNewQ:e=>this.mutGift(n=>{n.newQ=e.target.value===''?'':Math.max(1,Math.min(99,+e.target.value||1));}),
+      onGfKey:e=>{if(e.key==='Enter')gfAdd();},onGfAdd:gfAdd,
+      gfAllDone:gfTotal>0&&gfLeftN===0,
+      gfBadgeS:badgeBase+(gfTotal>0&&gfLeftN===0?okBadge:neutBadge),
+      gfBadgeT:gfTotal>0&&gfLeftN===0?'All '+fmt(gfTotal)+' gifts assigned':fmt(gfDone)+' of '+fmt(gfTotal)+' gifts assigned',
+      onGfSpread:()=>this.mutGift(n=>{if(!n.friends.length)return;
+        const counts=n.friends.map((_,fi)=>n.given.filter(g=>g.to===fi).length);
+        n.gifts.forEach((g,gi)=>{let left=Math.max(1,+g.q||1)-n.given.filter(y=>y.g===gi).length;
+          while(left-->0){let m=0;counts.forEach((c,i)=>{if(c<counts[m])m=i;});n.given.push({g:gi,to:m});counts[m]++;}});
+        n.sel=null;n.drag=null;n.over=null;}),
+      onGfAddFriend:()=>this.mutGift(n=>{n.friends.push('Friend '+(n.friends.length+1));}),
+      gfOccs,gfFolders,onGfAddOcc:()=>this.gfAddOcc(),onGfBack:()=>this.gfBack(),
+      gfIsFolders:GF.view!=='board',gfIsBoard:GF.view==='board',
+      gfSpreadS:'padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:var(--surface);cursor:pointer;font-size:12.5px;font-weight:500;display:'+(GF.view==='board'?'block':'none'),
+      gfOccName:((GF.occs||[])[GF.oi||0]||{}).name||'Occasion'
+    };
+  }
+}
+</script>
+</body>
+</html>
