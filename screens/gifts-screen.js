@@ -3,10 +3,13 @@ const gfCol=i=>`var(--cat-${(i%6)+1})`;
 function GiftsScreen({onHome}){
   const [title,setTitle]=React.useState('My gift list');
   const [view,setView]=React.useState('Matrix');
-  const [friends,setFriends]=React.useState(['Mara','Noah','Priya']);
-  const [gifts,setGifts]=React.useState([{n:'Wool scarf',q:1},{n:'Coffee sampler',q:1},{n:'Board game',q:2},{n:'Scented candle',q:1},{n:'Photo book',q:3},{n:'Chocolate box',q:1}]);
-  const [given,setGiven]=React.useState([{g:0,to:1},{g:2,to:0},{g:2,to:2},{g:4,to:0}]);
-  const history=[{n:'Scented candle',to:1,when:'Birthday ’25'},{n:'Photo book',to:2,when:'Holidays ’25'},{n:'Chocolate box',to:0,when:'Holidays ’25'}];
+  const [occs,setOccs]=React.useState([{name:'Gift list',gifts:[{n:'Wool scarf',q:1},{n:'Coffee sampler',q:1},{n:'Board game',q:2}],given:[{g:0,to:1}],friends:['Mara','Noah','Priya']}]);
+  const [oi,setOi]=React.useState(0);
+  const occ=occs[oi]||{gifts:[],given:[],friends:[]};
+  const gifts=occ.gifts||[],given=occ.given||[],friends=occ.friends||[];
+  const patch=o=>setOccs(cs=>cs.map((x,i)=>i===oi?{...x,...o}:x));
+  const setGifts=v=>patch({gifts:v}),setGiven=v=>patch({given:v}),setFriends=v=>patch({friends:v});
+  const history=React.useMemo(()=>occs.flatMap((o,i)=>i===oi?[]:(o.given||[]).map(v=>({n:o.gifts[v.g]&&o.gifts[v.g].n,friend:(o.friends||[])[v.to],when:o.name}))),[occs,oi]);
   const [drag,setDrag]=React.useState(null),[over,setOver]=React.useState(null),[newG,setNewG]=React.useState('');
   const SUPA_URL='https://wylxvmkcrexwfpjpbhyy.supabase.co';
   const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5bHh2bWtjcmV4d2ZwanBiaHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2MzkxMDYsImV4cCI6MjA4NDIxNTEwNn0.6Bxo42hx4jwlJGWnfjiTpiDUsYfc1QLTN3YtrU1efak';
@@ -17,22 +20,16 @@ function GiftsScreen({onHome}){
       let rows=await(await fetch(SUPA_URL+'/rest/v1/argmin_boards?id=eq.gifts&select=data',{headers:H})).json();
       if(!Array.isArray(rows)||!rows[0])try{rows=await(await fetch(SUPA_URL+'/rest/v1/gift_boards?id=eq.default&select=data',{headers:H})).json();}catch(e){rows=[];}
       const d=Array.isArray(rows)&&rows[0]&&rows[0].data;
-      if(d&&Array.isArray(d.gifts)){
-        let gs=[],gv=[];
-        if(Array.isArray(d.given)){gs=d.gifts;gv=d.given;}
-        else d.gifts.forEach(x=>{gs.push({n:x.n,q:Math.max(1,+x.q||1)});if(x.to!=null)gv.push({g:gs.length-1,to:x.to});});
-        setGifts(gs);setGiven(gv);
-        if(Array.isArray(d.friends)&&d.friends.length)setFriends(d.friends);
-        if(d.title)setTitle(d.title);
-      }
+      if(d&&Array.isArray(d.occs)&&d.occs.length){setOccs(d.occs);setOi(Math.min(d.oi||0,d.occs.length-1));if(d.title)setTitle(d.title);}
+      else if(d&&Array.isArray(d.gifts)){setOccs([{name:d.title||'Gift list',gifts:d.gifts,given:d.given||[],friends:d.friends||[]}]);setOi(0);if(d.title)setTitle(d.title);}
     }catch(e){}
     setLoaded(true);})();},[]);
   React.useEffect(()=>{if(!loaded||!dirty.current)return;
-    const data={gifts,friends,given,title};
+    const data={occs,oi,title};
     try{localStorage.setItem('argmin-gift-v1',JSON.stringify(data));}catch(e){}
     clearTimeout(saveT.current);
     saveT.current=setTimeout(()=>{fetch(SUPA_URL+'/rest/v1/argmin_boards',{method:'POST',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id:'gifts',model:'gifts',family:'gf',data,updated_at:new Date().toISOString()})}).catch(()=>{});},600);
-  },[gifts,friends,given,title,loaded]);
+  },[occs,oi,title,loaded]);
   const qOf=i=>Math.max(1,+gifts[i].q||1);
   const usedOf=i=>given.filter(x=>x.g===i).length;
   const leftOf=i=>qOf(i)-usedOf(i);
@@ -46,6 +43,9 @@ function GiftsScreen({onHome}){
     <div style={{display:'flex',alignItems:'center',gap:10,marginTop:4,flexWrap:'wrap'}}>
       <TextInput variant="title" value={title} onChange={e=>{dirty.current=true;setTitle(e.target.value);}} style={{minWidth:180,flex:1}}/>
       <SegmentedControl options={['Board','Matrix']} value={view} onChange={setView}/>
+      <select value={oi} onChange={e=>{dirty.current=true;setOi(+e.target.value);}} style={{height:34,padding:'0 10px',border:'1px solid var(--line)',borderRadius:8,background:'var(--surface)',fontSize:'12.5px',fontWeight:600,color:'var(--ink)'}}>
+        {occs.map((o,i)=><option key={i} value={i}>{o.name}</option>)}
+      </select>
       <Button variant="secondary" onClick={()=>{const counts=friends.map((_,fi)=>given.filter(g=>g.to===fi).length);const add=[];gifts.forEach((g,gi)=>{let left=Math.max(1,+g.q||1)-given.filter(y=>y.g===gi).length;while(left-->0){let m=0;counts.forEach((c,i)=>{if(c<counts[m])m=i;});add.push({g:gi,to:m});counts[m]++;}});dirty.current=true;setGiven([...given,...add]);}}>Spread evenly</Button>
     </div>
     <div style={{display:'flex',alignItems:'center',gap:10,margin:'12px 0 18px',flexWrap:'wrap'}}>
@@ -122,8 +122,8 @@ function GiftsScreen({onHome}){
                 </span>)}
                 {mine.length===0&&<span style={{fontSize:12,color:'var(--mut)',padding:'6px 0'}}>Drop a gift here</span>}
               </div>
-              {history.some(h=>h.to===fi)&&<div style={{marginTop:8,paddingTop:8,borderTop:'1px dashed var(--line)',display:'flex',flexDirection:'column',gap:4}}>
-                {history.filter(h=>h.to===fi).map((h,hi)=><span key={hi} title={`Already got this — ${h.when}`} style={{display:'flex',alignItems:'center',gap:7,padding:'4px 9px',fontSize:12,color:'var(--mut)',opacity:0.75}}>
+              {history.some(h=>h.friend===f)&&<div style={{marginTop:8,paddingTop:8,borderTop:'1px dashed var(--line)',display:'flex',flexDirection:'column',gap:4}}>
+                {history.filter(h=>h.friend===f).map((h,hi)=><span key={hi} title={`Already got this — ${h.when}`} style={{display:'flex',alignItems:'center',gap:7,padding:'4px 9px',fontSize:12,color:'var(--mut)',opacity:0.75}}>
                   <span style={{flex:'none',width:8,height:8,borderRadius:'50%',border:'1.5px solid var(--mut)',boxSizing:'border-box'}}></span>
                   <span style={{flex:1,minWidth:0,textDecoration:'line-through',textDecorationColor:'var(--line)'}}>{h.n}</span>
                   <span style={{flex:'none',fontFamily:'var(--font-mono)',fontSize:'10px'}}>{h.when}</span>
