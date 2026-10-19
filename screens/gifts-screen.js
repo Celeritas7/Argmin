@@ -14,12 +14,21 @@ function GiftsScreen({onHome}){
   const SUPA_URL='https://wylxvmkcrexwfpjpbhyy.supabase.co';
   const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5bHh2bWtjcmV4d2ZwanBiaHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2MzkxMDYsImV4cCI6MjA4NDIxNTEwNn0.6Bxo42hx4jwlJGWnfjiTpiDUsYfc1QLTN3YtrU1efak';
   const [loaded,setLoaded]=React.useState(false);
+  const [sync,setSync]=React.useState('loading');
   const saveT=React.useRef(null),dirty=React.useRef(false);
   React.useEffect(()=>{const H={apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY};(async()=>{
+    let d=null;
     try{
       let rows=await(await fetch(SUPA_URL+'/rest/v1/argmin_boards?id=eq.gifts&select=data',{headers:H})).json();
       if(!Array.isArray(rows)||!rows[0])try{rows=await(await fetch(SUPA_URL+'/rest/v1/gift_boards?id=eq.default&select=data',{headers:H})).json();}catch(e){rows=[];}
-      const d=Array.isArray(rows)&&rows[0]&&rows[0].data;
+      if(!Array.isArray(rows))throw new Error('server unavailable');
+      d=rows[0]&&rows[0].data;
+      setSync('saved');
+    }catch(e){
+      try{d=JSON.parse(localStorage.getItem('argmin-gift-v1'));}catch(_){d=null;}
+      setSync('offline');
+    }
+    try{
       if(d&&Array.isArray(d.occs)&&d.occs.length){setOccs(d.occs);setOi(Math.min(d.oi||0,d.occs.length-1));if(d.title)setTitle(d.title);}
       else if(d&&Array.isArray(d.gifts)){setOccs([{name:d.title||'Gift list',gifts:d.gifts,given:d.given||[],friends:d.friends||[]}]);setOi(0);if(d.title)setTitle(d.title);}
     }catch(e){}
@@ -28,7 +37,8 @@ function GiftsScreen({onHome}){
     const data={occs,oi,title};
     try{localStorage.setItem('argmin-gift-v1',JSON.stringify(data));}catch(e){}
     clearTimeout(saveT.current);
-    saveT.current=setTimeout(()=>{fetch(SUPA_URL+'/rest/v1/argmin_boards',{method:'POST',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id:'gifts',model:'gifts',family:'gf',data,updated_at:new Date().toISOString()})}).catch(()=>{});},600);
+    setSync('saving');
+    saveT.current=setTimeout(()=>{fetch(SUPA_URL+'/rest/v1/argmin_boards',{method:'POST',headers:{apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates'},body:JSON.stringify({id:'gifts',model:'gifts',family:'gf',data,updated_at:new Date().toISOString()})}).then(r=>setSync(r.ok?'saved':'offline')).catch(()=>setSync('offline'));},600);
   },[occs,oi,title,loaded]);
   const qOf=i=>Math.max(1,+gifts[i].q||1);
   const usedOf=i=>given.filter(x=>x.g===i).length;
@@ -39,11 +49,11 @@ function GiftsScreen({onHome}){
   const cellBtn={width:'100%',height:'100%',border:'none',background:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0};
   const headH=40,rowH=44,colW=104;
   return <div data-screen-label="Gift assignment board" style={{maxWidth:1020,margin:'0 auto',padding:'28px 24px 72px'}}>
-    <div style={{fontSize:12,color:'var(--mut)'}}><a onClick={onHome} style={{cursor:'pointer'}}>Problems</a> / Gift assignment</div>
+    <div style={{fontSize:12,color:'var(--mut)'}}><button type="button" className="am-link" onClick={onHome}>Problems</button> / Gift assignment</div>
     <div style={{display:'flex',alignItems:'center',gap:10,marginTop:4,flexWrap:'wrap'}}>
       <TextInput variant="title" value={title} onChange={e=>{dirty.current=true;setTitle(e.target.value);}} style={{minWidth:180,flex:1}}/>
       <SegmentedControl options={['Board','Matrix']} value={view} onChange={setView}/>
-      <select value={oi} onChange={e=>{dirty.current=true;setOi(+e.target.value);}} style={{height:34,padding:'0 10px',border:'1px solid var(--line)',borderRadius:8,background:'var(--surface)',fontSize:'12.5px',fontWeight:600,color:'var(--ink)'}}>
+      <select aria-label="Occasion" value={oi} onChange={e=>{dirty.current=true;setOi(+e.target.value);}} style={{height:34,padding:'0 10px',border:'1px solid var(--line)',borderRadius:8,background:'var(--surface)',fontSize:'12.5px',fontWeight:600,color:'var(--ink)'}}>
         {occs.map((o,i)=><option key={i} value={i}>{o.name}</option>)}
       </select>
       <Button variant="secondary" onClick={()=>{const counts=friends.map((_,fi)=>given.filter(g=>g.to===fi).length);const add=[];gifts.forEach((g,gi)=>{let left=Math.max(1,+g.q||1)-given.filter(y=>y.g===gi).length;while(left-->0){let m=0;counts.forEach((c,i)=>{if(c<counts[m])m=i;});add.push({g:gi,to:m});counts[m]++;}});dirty.current=true;setGiven([...given,...add]);}}>Spread evenly</Button>
@@ -51,7 +61,7 @@ function GiftsScreen({onHome}){
     <div style={{display:'flex',alignItems:'center',gap:10,margin:'12px 0 18px',flexWrap:'wrap'}}>
       <Badge tone={leftN===0?'ok':'warn'}>{leftN===0?`All ${total} gifts assigned`:`${done} of ${total} gifts assigned`}</Badge>
       <span style={{fontSize:12,color:'var(--mut)'}}>{gifts.length} gifts × {friends.length} friends</span>
-      <span style={{fontSize:12,color:'var(--mut)',fontFamily:'var(--font-mono)'}}>{loaded?'· synced':'· loading…'}</span>
+      <span role="status" style={{fontSize:12,color:sync==='offline'?'var(--warn)':'var(--mut)',fontFamily:'var(--font-mono)'}}>{{loading:'· loading…',saving:'· saving…',saved:'· saved',offline:'· offline — saved on this device only'}[sync]}</span>
     </div>
     {view==='Matrix'?<Card>
       <div style={{overflowX:'auto'}}>
@@ -61,7 +71,7 @@ function GiftsScreen({onHome}){
             {friends.map((f,fi)=><div key={fi} style={{width:colW,height:headH,background:'var(--head)',borderRight:'1px solid var(--line2)',borderBottom:'1px solid var(--line2)',display:'flex',alignItems:'center',justifyContent:'center',boxSizing:'border-box',fontSize:12,fontWeight:600}}>{f}</div>)}
             <div style={{width:96,height:headH,background:'var(--head)',borderBottom:'1px solid var(--line2)',display:'flex',alignItems:'center',justifyContent:'flex-end',paddingRight:14,boxSizing:'border-box',fontSize:'11.5px',fontWeight:600}}>In pile</div>
           </div>
-          {gifts.map((g,gi)=>{const left=leftOf(g?gi:gi);
+          {gifts.map((g,gi)=>{const left=leftOf(gi);
             return <div key={gi} style={{display:'flex'}}>
             <div style={{width:190,height:rowH,background:'var(--head)',borderRight:'1px solid var(--line2)',borderBottom:'1px solid var(--line2)',display:'flex',alignItems:'center',gap:8,paddingLeft:12,boxSizing:'border-box'}}>
               <span style={{flex:'none',width:8,height:8,borderRadius:'50%',background:gfCol(gi)}}></span>
@@ -70,9 +80,9 @@ function GiftsScreen({onHome}){
             </div>
             {friends.map((f,fi)=>{const has=given.some(x=>x.g===gi&&x.to===fi);const can=has||left>0;
               return <div key={fi} style={{width:colW,height:rowH,borderRight:'1px solid var(--line2)',borderBottom:'1px solid var(--line2)',boxSizing:'border-box'}}>
-                <button onClick={()=>has?unassign(gi,fi):assign(gi,fi)} title={has?`Take back from ${f}`:(can?`Give to ${f}`:'None left in pile')} disabled={!can} style={{...cellBtn,cursor:can?'pointer':'default'}} onMouseEnter={e=>{if(can&&!has)e.currentTarget.firstChild.style.opacity=1;}} onMouseLeave={e=>{if(!has)e.currentTarget.firstChild.style.opacity=0;}}>
+                <button onClick={()=>has?unassign(gi,fi):assign(gi,fi)} title={has?`Take back from ${f}`:(can?`Give to ${f}`:'None left in pile')} aria-label={has?`${g.n}: take back from ${f}`:`${g.n}: give to ${f}`} aria-pressed={has} disabled={!can} style={{...cellBtn,cursor:can?'pointer':'default'}} onMouseEnter={e=>{if(can&&!has)e.currentTarget.firstChild.style.opacity=1;}} onMouseLeave={e=>{if(!has)e.currentTarget.firstChild.style.opacity=can?0.35:0;}}>
                   {has?<span style={{width:12,height:12,borderRadius:'50%',background:gfCol(gi)}}></span>
-                  :<span style={{width:12,height:12,borderRadius:'50%',border:`1.5px dashed ${can?'var(--mut)':'var(--line2)'}`,boxSizing:'border-box',opacity:0,transition:'opacity .12s'}}></span>}
+                  :<span style={{width:12,height:12,borderRadius:'50%',border:`1.5px dashed ${can?'var(--mut)':'var(--line2)'}`,boxSizing:'border-box',opacity:can?0.35:0,transition:'opacity .12s'}}></span>}
                 </button>
               </div>;})}
             <div style={{width:96,height:rowH,background:'var(--head)',borderBottom:'1px solid var(--line2)',display:'flex',alignItems:'center',justifyContent:'flex-end',paddingRight:14,boxSizing:'border-box',fontFamily:'var(--font-mono)',fontSize:12,color:left===0?'var(--ok)':'var(--ink)',fontWeight:600}}>{left===0?'✓ 0':left}</div>
@@ -85,7 +95,7 @@ function GiftsScreen({onHome}){
           </div>
         </div>
       </div>
-      <div style={{marginTop:12,fontSize:'11.5px',color:'var(--mut)'}}>Each dot is one handed-out copy — click an empty cell to give that gift, click a dot to take it back. The board and the matrix are two views of the same list.</div>
+      <div style={{marginTop:12,fontSize:'11.5px',color:'var(--mut)'}}>Each dot is one handed-out copy — click a dashed ring to give that gift, click a dot to take it back. The board and the matrix are two views of the same list.</div>
     </Card>
     :<div>
       <div style={{display:'flex',gap:18,alignItems:'flex-start',flexWrap:'wrap'}}>
@@ -111,14 +121,14 @@ function GiftsScreen({onHome}){
               onDragOver={e=>{e.preventDefault();setOver(fi);}} onDragLeave={()=>setOver(o=>o===fi?null:o)}
               onDrop={e=>{e.preventDefault();if(drag!=null)assign(drag,fi);setDrag(null);setOver(null);}}>
               <div style={{display:'flex',alignItems:'center',gap:8}}>
-                <span style={{flex:1,fontSize:13,fontWeight:600}}>{f}</span>
+                <input value={f} aria-label={`Friend ${fi+1} name`} onChange={e=>{dirty.current=true;setFriends(friends.map((x,i)=>i===fi?e.target.value:x));}} style={{flex:1,minWidth:0,fontSize:13,fontWeight:600,border:'none',background:'none',outline:'none',padding:'2px 0'}}/>
                 <Badge tone={mine.length===0?'warn':'ok'}>{mine.length===0?'none yet':mine.length}</Badge>
               </div>
               <div style={{marginTop:8,display:'flex',flexDirection:'column',gap:6,minHeight:44}}>
                 {mine.map(o=><span key={o.vi} style={{display:'flex',alignItems:'center',gap:7,padding:'6px 9px',border:'1px solid var(--line)',borderRadius:8,background:'var(--head)',fontSize:'12.5px',fontWeight:500}}>
                   <span style={{flex:'none',width:8,height:8,borderRadius:'50%',background:gfCol(o.x.g)}}></span>
                   <span style={{flex:1,minWidth:0}}>{gifts[o.x.g]?gifts[o.x.g].n:'?'}</span>
-                  <button onClick={()=>{dirty.current=true;setGiven(given.filter((_,i)=>i!==o.vi));}} title="Take back" style={{flex:'none',width:16,height:16,border:'none',borderRadius:5,background:'none',cursor:'pointer',fontSize:'10.5px',lineHeight:1,color:'var(--mut)',padding:0}}>×</button>
+                  <button onClick={()=>{dirty.current=true;setGiven(given.filter((_,i)=>i!==o.vi));}} title="Take back" aria-label={`Take back ${gifts[o.x.g]?gifts[o.x.g].n:'gift'} from ${f}`} style={{flex:'none',width:24,height:24,margin:'-4px -5px -4px 0',border:'none',borderRadius:6,background:'none',cursor:'pointer',fontSize:'13px',lineHeight:1,color:'var(--mut)',padding:0}}>×</button>
                 </span>)}
                 {mine.length===0&&<span style={{fontSize:12,color:'var(--mut)',padding:'6px 0'}}>Drop a gift here</span>}
               </div>
@@ -133,7 +143,7 @@ function GiftsScreen({onHome}){
           <button onClick={()=>{dirty.current=true;setFriends([...friends,'Friend '+(friends.length+1)]);}} style={{minHeight:110,border:'1px dashed var(--line)',borderRadius:12,background:'none',cursor:'pointer',fontSize:'12.5px',fontWeight:500,color:'var(--mut)'}}>+ Add friend</button>
         </div>
       </div>
-      <div style={{marginTop:12,fontSize:'11.5px',color:'var(--mut)'}}>Drag a gift onto a friend — each copy leaves the pile as you give it. Switch to Matrix to review who already got what.</div>
+      <div style={{marginTop:12,fontSize:'11.5px',color:'var(--mut)'}}>Drag a gift onto a friend — each copy leaves the pile as you give it. On touch or keyboard, use Matrix to hand gifts out. Click a friend's name to rename them.</div>
     </div>}
   </div>;
 }

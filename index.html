@@ -21,6 +21,8 @@ function App(){
   const [screen,setScreen]=React.useState('home');
   const [theme,setTheme]=React.useState('light');
   const goHome=()=>setScreen('home');
+  React.useEffect(()=>{document.documentElement.dataset.theme=theme;},[theme]);
+  React.useEffect(()=>{window.scrollTo(0,0);},[screen]);
   return <div data-theme={theme} style={{minHeight:'100vh',background:'var(--bg)',color:'var(--ink)',fontFamily:'var(--font-sans)',WebkitFontSmoothing:'antialiased'}}>
     <TopNav
       links={[{label:'Problems',active:screen!=='saved',onClick:goHome},{label:'Saved',active:screen==='saved',onClick:()=>setScreen('saved')}]}

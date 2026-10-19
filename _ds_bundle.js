@@ -118,6 +118,7 @@ function Chip({
   return /*#__PURE__*/React.createElement("button", {
     type: "button",
     onClick: onClick,
+    "aria-pressed": !!selected,
     className: 'am-chip' + (selected ? ' am-chip-sel' : '') + (hasRank ? ' am-chip-rank' : ''),
     style: hasRank && rank === 1 ? {
       borderColor: 'color-mix(in oklab, var(--accent) 45%, var(--line))',
@@ -313,10 +314,12 @@ function Button({
   onClick,
   disabled,
   title,
-  style
+  style,
+  ...rest
 }) {
   ensure();
   return /*#__PURE__*/React.createElement("button", {
+    ...rest,
     type: "button",
     className: 'am-btn am-btn-' + variant,
     onClick: onClick,
@@ -352,6 +355,7 @@ function SegmentedControl({
     return /*#__PURE__*/React.createElement("button", {
       key: v,
       type: "button",
+      "aria-pressed": act,
       onClick: () => onChange && onChange(v),
       style: {
         padding: '8px 13px',
@@ -467,7 +471,16 @@ function StepTimeline({
     const act = i === active;
     return /*#__PURE__*/React.createElement("div", {
       key: i,
+      role: "button",
+      tabIndex: 0,
+      "aria-current": act ? "step" : undefined,
       onClick: () => onSelect && onSelect(i),
+      onKeyDown: e => {
+        if ((e.key === 'Enter' || e.key === ' ') && onSelect) {
+          e.preventDefault();
+          onSelect(i);
+        }
+      },
       style: {
         padding: '12px 14px',
         borderRadius: 'var(--r-tile,10px)',
@@ -537,6 +550,7 @@ function Tabs({
   style
 }) {
   return /*#__PURE__*/React.createElement("div", {
+    role: "tablist",
     style: {
       display: 'flex',
       borderBottom: '1px solid var(--line)',
@@ -547,6 +561,8 @@ function Tabs({
     return /*#__PURE__*/React.createElement("button", {
       key: i,
       type: "button",
+      role: "tab",
+      "aria-selected": act,
       onClick: () => onChange && onChange(i),
       style: {
         position: 'relative',

@@ -29,23 +29,23 @@ function ResultsScreen({onEdit,onHome}){
   const ex=KIT.ex,S=KIT.steps,cs=S[Math.min(step,S.length-1)];
   const aL=[78,168,258],aR=[52,136,220,304];
   return <div data-screen-label="Results — solve output" style={{maxWidth:1180,margin:'0 auto',padding:'28px 24px 72px'}}>
-    <div style={{fontSize:12,color:'var(--mut)'}}><a onClick={onHome} style={{cursor:'pointer'}}>Problems</a> / Transportation / <span style={{color:'var(--ink)'}}>Results</span></div>
+    <div style={{fontSize:12,color:'var(--mut)'}}><button type="button" className="am-link" onClick={onHome}>Problems</button> / <button type="button" className="am-link" onClick={onEdit}>Transportation</button> / <span style={{color:'var(--ink)'}}>Results</span></div>
     <div style={{display:'flex',alignItems:'center',gap:12,marginTop:4,flexWrap:'wrap'}}>
       <h1 style={{margin:0,fontSize:21,fontWeight:600,letterSpacing:'-0.01em'}}>Denver network</h1>
       <Badge tone="ok" solid>✓ EXACT OPTIMUM</Badge>
       <span style={{fontSize:12,color:'var(--mut)'}}>MODI · from North-West Corner · 2 iterations</span>
       <div style={{flex:1}}></div>
       <Button variant="secondary" onClick={onEdit}>Edit data</Button>
-      <Button variant="secondary">Save</Button>
+      <span title="Coming soon"><Button variant="secondary" disabled>Save</Button></span>
     </div>
     <Metric label="min Z =" value="2,850" note="total shipping cost — down from 4,400 at the initial solution" style={{marginTop:14}}/>
     <Tabs items={['Answer','Steps','Insight']} active={tab} onChange={setTab} style={{marginTop:20}}/>
-    {tab===1&&<div style={{display:'grid',gridTemplateColumns:'300px 1fr',gap:22,marginTop:20,alignItems:'start'}}>
+    {tab===1&&<div className="am-steps">
       <div>
         <StepTimeline steps={S} active={step} onSelect={setStep}/>
         <div style={{display:'flex',alignItems:'center',gap:8,marginTop:12}}>
-          <Button variant="secondary" style={{width:30,height:28,padding:0}} onClick={()=>setStep(Math.max(0,step-1))}>‹</Button>
-          <Button variant="secondary" style={{width:30,height:28,padding:0}} onClick={()=>setStep(Math.min(S.length-1,step+1))}>›</Button>
+          <Button variant="secondary" aria-label="Previous step" disabled={step===0} style={{width:36,height:32,padding:0}} onClick={()=>setStep(Math.max(0,step-1))}>‹</Button>
+          <Button variant="secondary" aria-label="Next step" disabled={step===S.length-1} style={{width:36,height:32,padding:0}} onClick={()=>setStep(Math.min(S.length-1,step+1))}>›</Button>
           <span style={{fontFamily:'var(--font-mono)',fontSize:'11.5px',color:'var(--mut)'}}>{step+1} / {S.length}</span>
         </div>
       </div>
@@ -63,7 +63,7 @@ function ResultsScreen({onEdit,onHome}){
         </div>
       </Card>
     </div>}
-    {tab===0&&<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(480px,1fr))',gap:22,marginTop:20,alignItems:'start'}}>
+    {tab===0&&<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(480px,100%),1fr))',gap:22,marginTop:20,alignItems:'start'}}>
       <Card padding="20px 22px">
         <Overline>ALLOCATION</Overline>
         <div style={{overflowX:'auto',marginTop:12}}><AllocMatrix alloc={KIT.final} opt hover={hover} setHover={setHover}/></div>
@@ -71,17 +71,17 @@ function ResultsScreen({onEdit,onHome}){
       </Card>
       <Card padding="20px 22px">
         <Overline>FLOW DIAGRAM</Overline>
-        <svg width="470" height="356" style={{maxWidth:'100%',marginTop:6}}>
+        <svg role="img" aria-label="Flow diagram of units shipped on each route" viewBox="0 0 470 356" width="470" height="356" style={{maxWidth:'100%',height:'auto',marginTop:6}}>
           {Object.entries(KIT.final).map(([k,u])=>{const [r,c]=k.split(',').map(Number);const on=hover===k;
             return <g key={k}><line x1={124} y1={aL[r]} x2={336} y2={aR[c]} stroke={on?'var(--accent)':'color-mix(in oklab, var(--accent) 55%, var(--mut))'} strokeWidth={1.5+u/55} strokeLinecap="round" opacity={on?1:0.7} style={{cursor:'pointer'}} onMouseEnter={()=>setHover(k)} onMouseLeave={()=>setHover(null)}/>
-            <text x={124+(336-124)*0.55} y={aL[r]+(aR[c]-aL[r])*0.55-7} textAnchor="middle" style={{font:(on?'600':'500')+" 11px var(--font-mono)",fill:on?'var(--accent)':'var(--mut)'}}>{fmt(u)}</text></g>;})}
+            <text x={124+(336-124)*0.3} y={aL[r]+(aR[c]-aL[r])*0.3-6} textAnchor="middle" style={{font:(on?'600':'500')+" 11px var(--font-mono)",fill:on?'var(--accent)':'var(--mut)',stroke:'var(--surface)',strokeWidth:4,paintOrder:'stroke',strokeLinejoin:'round'}}>{fmt(u)}</text></g>;})}
           {KIT.ex.src.map((n,i)=><g key={'s'+i}><circle cx={96} cy={aL[i]} r={26} fill="var(--head)" stroke="var(--line)" strokeWidth="1.2"/><text x={96} y={aL[i]+4} textAnchor="middle" style={{font:"600 11.5px var(--font-mono)",fill:'var(--ink)'}}>{fmt(ex.supply[i])}</text><text x={62} y={aL[i]+4} textAnchor="end" style={{font:"500 11.5px var(--font-sans)",fill:'var(--mut)'}}>{n}</text></g>)}
           {KIT.ex.dst.map((n,i)=><g key={'d'+i}><circle cx={364} cy={aR[i]} r={26} fill="var(--head)" stroke="var(--line)" strokeWidth="1.2"/><text x={364} y={aR[i]+4} textAnchor="middle" style={{font:"600 11.5px var(--font-mono)",fill:'var(--ink)'}}>{fmt(ex.demand[i])}</text><text x={398} y={aR[i]+4} style={{font:"500 11.5px var(--font-sans)",fill:'var(--mut)'}}>{n}</text></g>)}
         </svg>
         <div style={{fontSize:'11.5px',color:'var(--mut)'}}>Edge width ∝ units shipped · hover a route to trace it in the matrix</div>
       </Card>
     </div>}
-    {tab===2&&<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(310px,1fr))',gap:22,marginTop:20,alignItems:'start'}}>
+    {tab===2&&<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(min(310px,100%),1fr))',gap:22,marginTop:20,alignItems:'start'}}>
       <Card padding="20px 22px">
         <h3 style={{margin:0,fontSize:14,fontWeight:600}}>Shadow prices</h3>
         <p style={{margin:'6px 0 14px',fontSize:'12.5px',lineHeight:1.5,color:'var(--mut)',textWrap:'pretty'}}>What one extra unit of supply or demand would do to total cost, relative to Denver (u = 0).</p>
