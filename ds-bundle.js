@@ -436,10 +436,12 @@ function TextInput({
   placeholder,
   inputMode,
   title,
-  style
+  style,
+  ...rest
 }) {
   ensure();
   return /*#__PURE__*/React.createElement("input", {
+    ...rest,
     className: 'am-in am-in-' + variant + (mono ? ' am-in-mono' : ''),
     value: value,
     onChange: onChange,
