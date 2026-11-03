@@ -12,7 +12,7 @@ function GiftsScreen({onHome}){
   const history=React.useMemo(()=>occs.flatMap((o,i)=>i===oi?[]:(o.given||[]).map(v=>({n:o.gifts[v.g]&&o.gifts[v.g].n,friend:(o.friends||[])[v.to],when:o.name}))),[occs,oi]);
   const [drag,setDrag]=React.useState(null),[over,setOver]=React.useState(null),[newG,setNewG]=React.useState('');
   const SUPA_URL='https://wylxvmkcrexwfpjpbhyy.supabase.co';
-  const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5bHh2bWtjcmV4d2ZwanBiaHl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2MzkxMDYsImV4cCI6MjA4NDIxNTEwNn0.6Bxo42hx4jwlJGWnfjiTpiDUsYfc1QLTN3YtrU1efak';
+  const SUPA_KEY='sb_publishable_e3pDOuxIdstaC7s0a680kQ_R10TrAyv';
   const [loaded,setLoaded]=React.useState(false);
   const saveT=React.useRef(null),dirty=React.useRef(false);
   React.useEffect(()=>{const H={apikey:SUPA_KEY,Authorization:'Bearer '+SUPA_KEY};(async()=>{
